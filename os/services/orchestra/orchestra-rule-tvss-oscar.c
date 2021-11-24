@@ -51,6 +51,7 @@
 #include "net/packetbuf.h"
 #include "net/routing/routing.h"
 #include "net/mac/tsch/tsch-log.h"
+#include "net/mac/tsch/tsch.c"
 
 #define DEBUG DEBUG_PRINT
 #include "net/net-debug.h"

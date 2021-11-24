@@ -1155,7 +1155,7 @@ send_packet(mac_callback_t sent, void *ptr)
       LOG_INFO("send packet to ");
       LOG_INFO_LLADDR(addr);
       LOG_INFO_(" with seqno %u, queue %u/%u %u/%u, len %u %u\n",
-             tsch_packet_seqno, tsch_queue_nbr_packet_count(tsch_slotframen),
+             tsch_packet_seqno, tsch_queue_nbr_packet_count(n),
              TSCH_QUEUE_NUM_PER_NEIGHBOR, tsch_queue_global_packet_count(),
              QUEUEBUF_NUM, p->header_len, queuebuf_datalen(p->qb));
     }
@@ -1163,7 +1163,9 @@ send_packet(mac_callback_t sent, void *ptr)
   if(ret != MAC_TX_DEFERRED) {
     mac_call_sent_callback(sent, ptr, ret, 1);
   }
-}tsch_slotframe
+}
+/*---------------------------------------------------------------------------*/
+static void
 packet_input(void)
 {
   int frame_parsed = 1;
@@ -1222,7 +1224,7 @@ turn_on(void)
 
 /*---------------------------------------------------------------------------*///ksh.. LF
 //returns the current ASFN for time varying slotframe scheduling
-static uint16_t 
+uint16_t 
 tsch_schedule_get_current_asfn(struct tsch_slotframe *sf){
   uint16_t mod=TSCH_ASN_MOD(tsch_current_asn, sf->size);
   struct tsch_asn_t newasn;
