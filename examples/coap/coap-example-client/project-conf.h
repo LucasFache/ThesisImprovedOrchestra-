@@ -54,6 +54,8 @@
 
 #define ALICE_UNICAST_SF_ID 2 //slotframe handle of unicast slotframe
 
+#define LOG_CONF_WITH_ANNOTATE 1 //show RPL tree
+
 /**********************************************************************/
 
 #endif /* PROJECT_CONF_H_ */

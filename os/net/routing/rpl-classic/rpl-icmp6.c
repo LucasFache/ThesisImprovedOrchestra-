@@ -100,7 +100,6 @@ UIP_ICMP6_HANDLER(dio_handler, ICMP6_RPL, RPL_CODE_DIO, dio_input);
 UIP_ICMP6_HANDLER(dao_handler, ICMP6_RPL, RPL_CODE_DAO, dao_input);
 UIP_ICMP6_HANDLER(dao_ack_handler, ICMP6_RPL, RPL_CODE_DAO_ACK, dao_ack_input);
 /*---------------------------------------------------------------------------*/
-
 #if RPL_WITH_DAO_ACK
 static uip_ds6_route_t *
 find_route_entry_by_dao_ack(uint8_t seq)
@@ -639,7 +638,9 @@ dio_output(rpl_instance_t *instance, uip_ipaddr_t *uc_addr)
 static void
 dao_input_storing(void)
 {
+  LOG_INFO("BREADCRUM dao_input_storing\n");
 #if RPL_WITH_STORING
+  printf("BREADCRUM RPL_WITH_STORING dao_input_storing\n");
   uip_ipaddr_t dao_sender_addr;
   rpl_dag_t *dag;
   rpl_instance_t *instance;
@@ -854,6 +855,8 @@ dao_input_storing(void)
   }
 
   rep = rpl_add_route(dag, &prefix, prefixlen, &dao_sender_addr);
+  printf("BREADCRUM rpl_ad_route  rep = %u",rep);
+  
   if(rep == NULL) {
     RPL_STAT(rpl_stats.mem_overflows++);
     LOG_ERR("Could not add a route after receiving a DAO\n");
@@ -1055,6 +1058,7 @@ dao_input_nonstoring(void)
 static void
 dao_input(void)
 {
+  printf("BREADCRUM dao_input\n");
   rpl_instance_t *instance;
   uint8_t instance_id;
 
@@ -1073,6 +1077,7 @@ dao_input(void)
 
   if(RPL_IS_STORING(instance)) {
     dao_input_storing();
+    //printf("FIRST BREADCRUM RPL_IS_STORING dao_input\n");  // LF
   } else if(RPL_IS_NON_STORING(instance)) {
     dao_input_nonstoring();
   }

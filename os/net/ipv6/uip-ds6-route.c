@@ -145,6 +145,7 @@ call_route_callback(int event, const uip_ipaddr_t *route,
        event == UIP_DS6_NOTIFICATION_DEFRT_RM) {
       num = list_length(defaultrouterlist);
     } else {
+      printf("BREADCRUM call_route_callback\n");
       num = num_routes;
     }
     n->callback(event, route, nexthop, num);
@@ -271,6 +272,7 @@ int
 uip_ds6_route_num_routes(void)
 {
 #if (UIP_MAX_ROUTES != 0)
+  printf("BREADCRUM uip_ds6_route_num_routes\n");
   return num_routes;
 #else /* (UIP_MAX_ROUTES != 0) */
   return 0;
@@ -339,6 +341,7 @@ uip_ds6_route_t *
 uip_ds6_route_add(const uip_ipaddr_t *ipaddr, uint8_t length,
                   const uip_ipaddr_t *nexthop)
 {
+  printf("BREADCRUM route_add\n");
 #if (UIP_MAX_ROUTES != 0)
   uip_ds6_route_t *r;
   struct uip_ds6_route_neighbor_route *nbrr;
@@ -462,6 +465,8 @@ uip_ds6_route_add(const uip_ipaddr_t *ipaddr, uint8_t length,
     r->neighbor_routes = routes;
     num_routes++;
 
+    printf("BREADCRUM uip_ds6_route_add\n");
+
     LOG_INFO("Add: num %d\n", num_routes);
 
     /* lock this entry so that nexthop is not removed */
@@ -547,6 +552,8 @@ uip_ds6_route_rm(uip_ds6_route_t *route)
     memb_free(&neighborroutememb, neighbor_route);
 
     num_routes--;
+
+    printf("BREADCRUM uip_ds6_route_rm\n");
 
     LOG_INFO("Rm: num %d\n", num_routes);
 

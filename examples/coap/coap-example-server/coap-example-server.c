@@ -81,6 +81,13 @@ extern coap_resource_t res_battery;
 extern coap_resource_t res_temperature;
 #endif
 
+/* Log configuration for pronting the routes *///  LF
+#include "sys/log.h"
+#include "net/ipv6/uip-ds6-route.h"
+#include "net/ipv6/uip-sr.h"
+#define LOG_MODULE "App"
+#define WITH_PERIODIC_ROUTES_PRINT 1
+
 PROCESS(er_example_server, "Erbium Example Server");
 AUTOSTART_PROCESSES(&er_example_server);
 
@@ -126,6 +133,19 @@ PROCESS_THREAD(er_example_server, ev, data)
 
   /* Define application-specific events here. */
   while(1) {
+
+    /* Log configuration for pronting the routes */// LF
+    LOG_INFO("Routing entries %u\n", uip_ds6_route_num_routes());
+    uip_ds6_route_t *route = uip_ds6_route_head();
+    while(route) {
+      LOG_INFO("Route ");
+      LOG_INFO_6ADDR(&route->ipaddr);
+      LOG_INFO_("/128 via ");
+      LOG_INFO_6ADDR(uip_ds6_route_nexthop(route));
+      LOG_INFO("\n");
+      route = uip_ds6_route_next(route);
+    }
+    
     PROCESS_WAIT_EVENT();
 #if PLATFORM_HAS_BUTTON
 #if PLATFORM_SUPPORTS_BUTTON_HAL
@@ -143,6 +163,5 @@ PROCESS_THREAD(er_example_server, ev, data)
     }
 #endif /* PLATFORM_HAS_BUTTON */
   }                             /* while (1) */
-
   PROCESS_END();
 }

@@ -120,6 +120,34 @@ real_hash(uint16_t value, uint16_t mod){ //Thomas Wang method..
 //  a=a^(a>>16);
   return (uint16_t)a%mod;
 }
+/*---------------------------------------------------------------------------*/// LF
+//ksh. remove link by timeslot and channel offset
+int
+tsch_schedule_remove_link_by_ts_choff(struct tsch_slotframe *slotframe, uint16_t timeslot, uint16_t channel_offset)
+{
+  return slotframe != NULL &&
+         tsch_schedule_remove_link(slotframe, tsch_schedule_get_link_by_ts_choff(slotframe, timeslot, channel_offset));
+}
+/*---------------------------------------------------------------------------*/
+//ksh. get link by timeslot and channel offset
+struct tsch_link *
+tsch_schedule_get_link_by_ts_choff(struct tsch_slotframe *slotframe, uint16_t timeslot, uint16_t channel_offset)
+{
+  if(!tsch_is_locked()) {
+    if(slotframe != NULL) {
+      struct tsch_link *l = list_head(slotframe->links_list);
+      /* Loop over all items. Assume there is max one link per timeslot */
+      while(l != NULL) {
+        if(l->timeslot == timeslot && l->channel_offset == channel_offset) {
+          return l;
+        }
+        l = list_item_next(l);
+      }
+      return l;
+    }
+  }
+  return NULL;
+}
 /*---------------------------------------------------------------------------*/
 /* Removes all slotframes, resulting in an empty schedule */
 int
@@ -457,7 +485,7 @@ default_tsch_link_comparator(struct tsch_link *a, struct tsch_link *b)
 #ifdef ALICE_TSCH_CALLBACK_SLOTFRAME_START
 void tsch_schedule_alice_data_sf_reschedule(struct tsch_asn_t *asn){  //ksh..
   
-  printf("In the rescheduler in the tsch-scheduler \n");
+  //printf("In the rescheduler in the tsch-scheduler \n");
 
   int flag=0;//ksh..
   if(!tsch_is_locked()) {
@@ -511,7 +539,7 @@ tsch_schedule_get_next_active_link(struct tsch_asn_t *asn, uint16_t *time_offset
 
     #ifdef ALICE_TSCH_CALLBACK_SLOTFRAME_START//ksh..
       tsch_schedule_alice_data_sf_reschedule(asn); //ALICE time varying scheduling
-      printf("tsch_schedule_get_next_active_link rescheduling is called in the tsch-schedulle.c\n");
+      //printf("tsch_schedule_get_next_active_link rescheduling is called in the tsch-schedulle.c\n");
     #endif
 
     struct tsch_slotframe *sf = list_head(slotframe_list);

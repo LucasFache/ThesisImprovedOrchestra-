@@ -37,6 +37,12 @@
 #define LOG_MODULE "RPL BR"
 #define LOG_LEVEL LOG_LEVEL_INFO
 
+/* Log configuration for pronting the routes *///  LF
+#include "sys/log.h"
+#include "net/ipv6/uip-ds6-route.h"
+#include "net/ipv6/uip-sr.h"
+#define WITH_PERIODIC_ROUTES_PRINT 1
+
 /* Declare and auto-start this file's process */
 PROCESS(contiki_ng_br, "Contiki-NG Border Router");
 AUTOSTART_PROCESSES(&contiki_ng_br);
@@ -52,6 +58,18 @@ PROCESS_THREAD(contiki_ng_br, ev, data)
 #endif /* BORDER_ROUTER_CONF_WEBSERVER */
 
   LOG_INFO("Contiki-NG Border Router started\n");
+
+  /* Log configuration for pronting the routes *///  LF
+  LOG_INFO("Routing entries %u\n", uip_ds6_route_num_routes());
+  uip_ds6_route_t *route = uip_ds6_route_head();
+  while(route) {
+    LOG_INFO("Route ");
+    LOG_INFO_6ADDR(&route->ipaddr);
+    LOG_INFO_("/128 via ");
+    LOG_INFO_6ADDR(uip_ds6_route_nexthop(route));
+    LOG_INFO("\n");
+    route = uip_ds6_route_next(route);
+  }
 
   PROCESS_END();
 }

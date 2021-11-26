@@ -256,13 +256,12 @@ reschedule_unicast_slotframe(void)
   //remove the whole links scheduled in the unicast slotframe
   struct tsch_link *l;
   l = list_head(sf_unicast->links_list);
-  printf("size of l %d \n",sizeof(l));
+  //printf("size of l %d \n",sizeof(l));
 
 //remove the whole links scheduled in the unicast slotframe
   while(l!=NULL) {    
     tsch_schedule_remove_link(sf_unicast, l);
     l = list_head(sf_unicast->links_list);
-
   }
 
 //scheduling the links

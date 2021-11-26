@@ -37,6 +37,7 @@
 
 #include "contiki.h"
 #include "orchestra.h"
+#include "stdio.h"
 
 static uint16_t slotframe_handle = 0;
 

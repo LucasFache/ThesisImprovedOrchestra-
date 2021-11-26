@@ -73,6 +73,13 @@ char *service_urls[NUMBER_OF_URLS] =
 static int uri_switch = 0;
 #endif
 
+/* Log configuration for pronting the routes *///  LF
+#include "sys/log.h"
+#include "net/ipv6/uip-ds6-route.h"
+#include "net/ipv6/uip-sr.h"
+#define LOG_MODULE "App"
+#define WITH_PERIODIC_ROUTES_PRINT 1
+
 /* This function is will be passed to COAP_BLOCKING_REQUEST() to handle responses. */
 void
 client_chunk_handler(coap_message_t *response)
@@ -107,6 +114,19 @@ PROCESS_THREAD(er_example_client, ev, data)
 #endif /* PLATFORM_HAS_BUTTON */
 
   while(1) {
+
+    /* Log configuration for pronting the routes *///  LF
+    LOG_INFO("Routing entries %u\n", uip_ds6_route_num_routes());
+    uip_ds6_route_t *route = uip_ds6_route_head();
+    while(route) {
+      LOG_INFO("Route ");
+      LOG_INFO_6ADDR(&route->ipaddr);
+      LOG_INFO_("/128 via ");
+      LOG_INFO_6ADDR(uip_ds6_route_nexthop(route));
+      LOG_INFO("\n");
+      route = uip_ds6_route_next(route);
+    }
+
     PROCESS_YIELD();
 
     if(etimer_expired(&et)) {
@@ -155,6 +175,5 @@ PROCESS_THREAD(er_example_client, ev, data)
 #endif /* PLATFORM_HAS_BUTTON */
     }
   }
-
   PROCESS_END();
 }

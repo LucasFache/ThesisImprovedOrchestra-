@@ -20,6 +20,10 @@ MAKE_WITH_ORCHESTRA_ROOT_RULE ?= 0
 
 MAKE_MAC = MAKE_MAC_TSCH
 
+MAKE_ROUTING = MAKE_ROUTING_RPL_CLASSIC
+
+MODULES += os/services/orchestra
+
 include $(CONTIKI)/Makefile.dir-variables
 MODULES += $(CONTIKI_NG_SERVICES_DIR)/shell
 

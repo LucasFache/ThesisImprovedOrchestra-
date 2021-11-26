@@ -43,9 +43,16 @@
 #include "net/ipv6/uip-sr.h"
 #include "net/mac/tsch/tsch.h"
 #include "net/routing/routing.h"
+#include "rpl-conf.h" //  LF
 
 #define DEBUG DEBUG_PRINT
 #include "net/ipv6/uip-debug.h"
+
+/* Log configuration for pronting the routes *///  LF
+#include "sys/log.h"
+#define LOG_LEVEL LOG_LEVEL_DBG
+#define LOG_MODULE "App"
+#define WITH_PERIODIC_ROUTES_PRINT 1
 
 /*---------------------------------------------------------------------------*/
 PROCESS(node_process, "RPL Node");
@@ -57,6 +64,17 @@ PROCESS_THREAD(node_process, ev, data)
   int is_coordinator;
 
   PROCESS_BEGIN();
+  /* Log configuration for pronting the routes *///  LF
+  LOG_INFO("Routing entries %u\n", uip_ds6_route_num_routes());
+  uip_ds6_route_t *route = uip_ds6_route_head();
+  while(route) {
+    LOG_INFO("Route ");
+    LOG_INFO_6ADDR(&route->ipaddr);
+    LOG_INFO_("/128 via ");
+    LOG_INFO_6ADDR(uip_ds6_route_nexthop(route));
+    LOG_INFO("\n");
+    route = uip_ds6_route_next(route);
+  }
 
   is_coordinator = 0;
 

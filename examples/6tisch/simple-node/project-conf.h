@@ -65,12 +65,27 @@
 
 #endif /* WITH_SECURITY */
 
+/**********************************************************************/
+/*******   configuration for time varying slotframe scheduling   ******/ //LF
+
+#define ALICE_TSCH_CALLBACK_SLOTFRAME_START alice_callback_slotframe_start //ksh. alice time varying slotframe schedule
+
+#define ALICE_UNICAST_SF_ID 2 //slotframe handle of unicast slotframe
+
+#define LOG_CONF_LEVEL_RPL LOG_LEVEL_DBG
+
+//#define LOG_CONF_WITH_ANNOTATE 1 //show RPL tree
+
+/**********************************************************************/
+
+
 /*******************************************************/
 /************* Other system configuration **************/
 /*******************************************************/
 
+
 /* Logging */
-#define LOG_CONF_LEVEL_RPL                         LOG_LEVEL_WARN
+//#define LOG_CONF_LEVEL_RPL                         LOG_LEVEL_WARN
 #define LOG_CONF_LEVEL_TCPIP                       LOG_LEVEL_WARN
 #define LOG_CONF_LEVEL_IPV6                        LOG_LEVEL_WARN
 #define LOG_CONF_LEVEL_6LOWPAN                     LOG_LEVEL_WARN

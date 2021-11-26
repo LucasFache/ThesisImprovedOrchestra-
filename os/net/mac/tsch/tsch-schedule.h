@@ -46,6 +46,10 @@
 #include "net/linkaddr.h"
 
 /********** Functions *********/
+//ksh. timeslot and channel offset  LF
+struct tsch_link *tsch_schedule_get_link_by_ts_choff(struct tsch_slotframe *slotframe, uint16_t timeslot, uint16_t channel_offset);
+//ksh. timeslot and channel offset  LF
+int tsch_schedule_remove_link_by_ts_choff(struct tsch_slotframe *slotframe, uint16_t timeslot, uint16_t channel_offset);
 
 /**
  * \brief Module initialization, call only once at init
