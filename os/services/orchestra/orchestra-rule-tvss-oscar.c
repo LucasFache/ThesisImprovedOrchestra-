@@ -72,14 +72,8 @@ static void reschedule_unicast_slotframe(void);
 #define UNICAST_SLOT_SHARED_FLAG      LINK_OPTION_SHARED
 #endif
 
-/*******  default common code  ******/// LF
-#if ORCHESTRA_EBSF_PERIOD > 0
-/* There is a slotframe for EBs, use this slotframe for non-EB traffic only */
-#define ORCHESTRA_COMMON_SHARED_TYPE              LINK_TYPE_NORMAL
-#else
-/* There is no slotframe for EBs, use this slotframe both EB and non-EB traffic */
-#define ORCHESTRA_COMMON_SHARED_TYPE              LINK_TYPE_ADVERTISING
-#endif
+//ksh. alice time varying slotframe schedule
+//#define ALICE_TSCH_CALLBACK_SLOTFRAME_START alice_callback_slotframe_start 
 
 /*---------------------------------------------------------------------------*/ //OK
 static uint16_t
@@ -109,7 +103,8 @@ get_node_channel_offset(const linkaddr_t *addr)
 /*---------------------------------------------------------------------------*/ //ksh. slotframe_callback. 
 #ifdef ALICE_TSCH_CALLBACK_SLOTFRAME_START
 void alice_callback_slotframe_start (uint16_t sfid, uint16_t sfsize){  
-  asfn_schedule=sfid; //ksh.. update curr asfn_schedule.
+  printf("RESCHEDULE CALLBACK\n");
+  asfn_schedule=sfid; //update curr asfn_schedule.
   reschedule_unicast_slotframe();
 }
 #endif
@@ -261,63 +256,25 @@ new_time_source(const struct tsch_neighbor *old, const struct tsch_neighbor *new
 static void
 reschedule_unicast_slotframe(void)
 {
-  printf("RESCHEDULE_UNICAST_SLOTFRAME\n");
   //reschedule all the links
-  linkaddr_t *local_addr = &linkaddr_node_addr; 
+  //linkaddr_t *local_addr = &linkaddr_node_addr; 
   struct tsch_link *l;
   l = list_head(sf_unicast->links_list);
 
   while(l!=NULL) {    
     const linkaddr_t *linkaddr = &l->addr;
     l->timeslot = get_node_timeslot(linkaddr);
-    l->channel_offset = get_node_channel_offset(local_addr);
-    l = l->next;
+    l->channel_offset = get_node_channel_offset(linkaddr);
+    //l = l->next;
+    l = list_item_next(l);
   }
-  
-  /*
-//scheduling the links
-  //First thing is to remove all links from the link_list
-  //tsch_schedule_remove_link(sf_unicast, l);
 
-  nbr_table_item_t *item = nbr_table_head(nbr_routes);
-  
-  while(item != NULL) {
-    linkaddr_t *addr = nbr_table_get_lladdr(nbr_routes, item);
-
-    //add link
-    add_uc_link(addr);
-
-    //move to the next item
-    printf("item size %u\n",sizeof(item));
-    item = nbr_table_next(nbr_routes, item);
-  }
-  */
-
- /*
-  if(l!=NULL)
-  {
-    uint16_t counter = 0;
-    while (counter != sizeof(l))
-    {
-      printf("size of l = %u and l.addr = %p",sizeof(l), (l->addr));
-      // Check pointer
-      //const linkaddr_t linkaddr = l->addr;
-      //remove_uc_link(&linkaddr);
-      //add_uc_link(&linkaddr);
-
-      counter++;
-      l = list_item_next(l);
-    }
-  }
-  */
-  
 }
 
 /*---------------------------------------------------------------------------*/
 static void
 init(uint16_t sf_handle)
 {
-  //LOG_INFO("INIT default common.c file");
   printf("INIT tvss oscar\n");
   uint16_t timeslot;
   linkaddr_t *local_addr = &linkaddr_node_addr;

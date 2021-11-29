@@ -57,7 +57,7 @@
 //Configuration used {LF}
 #ifndef ORCHESTRA_RULES
 #define ORCHESTRA_RULES { &eb_per_time_source, \
-                            &unicast_per_neighbor_rpl_storing, \
+                            &tvss_oscar, \
                             &default_common} 
                             
 // &tvss_oscar, 
