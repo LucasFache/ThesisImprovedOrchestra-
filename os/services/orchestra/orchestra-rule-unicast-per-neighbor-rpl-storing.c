@@ -228,7 +228,7 @@ init(uint16_t sf_handle)
 {
   uint16_t timeslot;
   linkaddr_t *local_addr = &linkaddr_node_addr;
-
+  
   slotframe_handle = sf_handle;
   local_channel_offset = get_node_channel_offset(local_addr);
   /* Slotframe for unicast transmissions */

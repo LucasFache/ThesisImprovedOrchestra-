@@ -55,12 +55,13 @@
                              &default_common } 
 */
 //Configuration used {LF}
+#ifndef ORCHESTRA_RULES
 #define ORCHESTRA_RULES { &eb_per_time_source, \
-                            &unicast_per_neighbor_rpl_ns, \
-                            &default_common } 
+                            &unicast_per_neighbor_rpl_storing, \
+                            &default_common} 
                             
 // &tvss_oscar, 
-                             
+#endif /* __ORCHESTRA_RULES__ */
 
 #endif /* ORCHESTRA_CONF_RULES */
 

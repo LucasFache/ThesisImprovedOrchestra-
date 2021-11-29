@@ -72,11 +72,20 @@ static void reschedule_unicast_slotframe(void);
 #define UNICAST_SLOT_SHARED_FLAG      LINK_OPTION_SHARED
 #endif
 
+/*******  default common code  ******/// LF
+#if ORCHESTRA_EBSF_PERIOD > 0
+/* There is a slotframe for EBs, use this slotframe for non-EB traffic only */
+#define ORCHESTRA_COMMON_SHARED_TYPE              LINK_TYPE_NORMAL
+#else
+/* There is no slotframe for EBs, use this slotframe both EB and non-EB traffic */
+#define ORCHESTRA_COMMON_SHARED_TYPE              LINK_TYPE_ADVERTISING
+#endif
+
 /*---------------------------------------------------------------------------*/ //OK
 static uint16_t
 get_node_timeslot(const linkaddr_t *addr)
 {
-  printf("GET_NODE_TIMESLOT tvs-oscar\n");
+  printf("GET_NODE_TIMESLOT tvss-oscar\n");
   if(addr != NULL && ORCHESTRA_UNICAST_PERIOD > 0) {
     return real_hash((ORCHESTRA_LINKADDR_HASH(addr)+asfn_schedule), (ORCHESTRA_UNICAST_PERIOD));
   } else {
@@ -87,7 +96,7 @@ get_node_timeslot(const linkaddr_t *addr)
 static uint16_t
 get_node_channel_offset(const linkaddr_t *addr)
 {
-  printf("GET_NODE_CHANNEL_OFFSET tvs-oscar\n");
+  printf("GET_NODE_CHANNEL_OFFSET tvss-oscar\n");
   int num_ch = (sizeof(TSCH_DEFAULT_HOPPING_SEQUENCE)/sizeof(uint8_t))-1;
 
   if(addr != NULL && ORCHESTRA_UNICAST_MAX_CHANNEL_OFFSET >= ORCHESTRA_UNICAST_MIN_CHANNEL_OFFSET && num_ch > 0) {
@@ -124,7 +133,7 @@ neighbor_has_uc_link(const linkaddr_t *linkaddr)
 static void
 add_uc_link(const linkaddr_t *linkaddr)
 {
-  printf("ADD_UC_LINK vts-oscar\n"); 
+  printf("ADD_UC_LINK vtss-oscar\n"); 
   if(linkaddr != NULL) {
     linkaddr_t *local_addr = &linkaddr_node_addr;                 // LF
     local_channel_offset = get_node_channel_offset(local_addr);   // LF
@@ -253,19 +262,25 @@ static void
 reschedule_unicast_slotframe(void)
 {
   printf("RESCHEDULE_UNICAST_SLOTFRAME\n");
-  //remove the whole links scheduled in the unicast slotframe
+  //reschedule all the links
+  linkaddr_t *local_addr = &linkaddr_node_addr; 
   struct tsch_link *l;
   l = list_head(sf_unicast->links_list);
-  //printf("size of l %d \n",sizeof(l));
 
-//remove the whole links scheduled in the unicast slotframe
   while(l!=NULL) {    
-    tsch_schedule_remove_link(sf_unicast, l);
-    l = list_head(sf_unicast->links_list);
+    const linkaddr_t *linkaddr = &l->addr;
+    l->timeslot = get_node_timeslot(linkaddr);
+    l->channel_offset = get_node_channel_offset(local_addr);
+    l = l->next;
   }
-
+  
+  /*
 //scheduling the links
+  //First thing is to remove all links from the link_list
+  //tsch_schedule_remove_link(sf_unicast, l);
+
   nbr_table_item_t *item = nbr_table_head(nbr_routes);
+  
   while(item != NULL) {
     linkaddr_t *addr = nbr_table_get_lladdr(nbr_routes, item);
 
@@ -273,21 +288,29 @@ reschedule_unicast_slotframe(void)
     add_uc_link(addr);
 
     //move to the next item
+    printf("item size %u\n",sizeof(item));
     item = nbr_table_next(nbr_routes, item);
-  }
-  /*
-  while (l != NULL)
-  {
-    // Check pointer
-    const linkaddr_t linkaddr = l->addr;
-    remove_uc_link(&linkaddr);
-    add_uc_link(&linkaddr);
-
-    
-    l = list_item_next(l);
   }
   */
 
+ /*
+  if(l!=NULL)
+  {
+    uint16_t counter = 0;
+    while (counter != sizeof(l))
+    {
+      printf("size of l = %u and l.addr = %p",sizeof(l), (l->addr));
+      // Check pointer
+      //const linkaddr_t linkaddr = l->addr;
+      //remove_uc_link(&linkaddr);
+      //add_uc_link(&linkaddr);
+
+      counter++;
+      l = list_item_next(l);
+    }
+  }
+  */
+  
 }
 
 /*---------------------------------------------------------------------------*/
@@ -295,12 +318,13 @@ static void
 init(uint16_t sf_handle)
 {
   //LOG_INFO("INIT default common.c file");
-  printf("INIT\n");
+  printf("INIT tvss oscar\n");
   uint16_t timeslot;
   linkaddr_t *local_addr = &linkaddr_node_addr;
 
   slotframe_handle = sf_handle;
   /* Slotframe for unicast transmissions */
+  
   sf_unicast = tsch_schedule_add_slotframe(slotframe_handle, ORCHESTRA_UNICAST_PERIOD);
 
   asfn_schedule = tsch_schedule_get_current_asfn(sf_unicast);//ksh..   LF
@@ -311,6 +335,7 @@ init(uint16_t sf_handle)
             ORCHESTRA_UNICAST_SENDER_BASED ? LINK_OPTION_TX | UNICAST_SLOT_SHARED_FLAG: LINK_OPTION_RX,
             LINK_TYPE_NORMAL, &tsch_broadcast_address,
             timeslot, local_channel_offset, 1);
+      
 }
 /*---------------------------------------------------------------------------*/
 struct orchestra_rule tvss_oscar = {

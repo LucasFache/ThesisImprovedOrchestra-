@@ -6,7 +6,7 @@ PLATFORMS_EXCLUDE = sky nrf52dk native
 CONTIKI=../../..
 
  # force Orchestra from command line
-MAKE_WITH_ORCHESTRA ?= 0
+MAKE_WITH_ORCHESTRA ?= 1
 # force Security from command line
 MAKE_WITH_SECURITY ?= 0
  # print #routes periodically, used for regression tests
@@ -17,17 +17,18 @@ MAKE_WITH_STORING_ROUTING ?= 0
 MAKE_WITH_LINK_BASED_ORCHESTRA ?= 0
 # Use the Orchestra root rule?
 MAKE_WITH_ORCHESTRA_ROOT_RULE ?= 0
+# Use the time varying slotframe scheduler with oscar implementation
+MAKE_WITH_TVSS_OSCAR ?= 1
 
 MAKE_MAC = MAKE_MAC_TSCH
-
 MAKE_ROUTING = MAKE_ROUTING_RPL_CLASSIC
-
-MODULES += os/services/orchestra
+#MODULES += os/services/orchestra
+#ORCHESTRA_EXTRA_RULES = &tvss_oscar #&unicast_per_neighbor_rpl_storing
 
 include $(CONTIKI)/Makefile.dir-variables
 MODULES += $(CONTIKI_NG_SERVICES_DIR)/shell
 
-ORCHESTRA_EXTRA_RULES = &unicast_per_neighbor_rpl_ns
+#ORCHESTRA_EXTRA_RULES = &unicast_per_neighbor_rpl_ns
 
 ifeq ($(MAKE_WITH_ORCHESTRA),1)
   MODULES += $(CONTIKI_NG_SERVICES_DIR)/orchestra
@@ -46,6 +47,10 @@ ifeq ($(MAKE_WITH_ORCHESTRA),1)
       ORCHESTRA_EXTRA_RULES +=,&special_for_root
     endif
   else
+    ifeq ($(MAKE_WITH_TVSS_OSCAR),1)
+      ORCHESTRA_EXTRA_RULES += &tvss_oscar
+    endif
+
     ifeq ($(MAKE_WITH_LINK_BASED_ORCHESTRA),1)
       $(error "Inconsistent configuration: link-based Orchestra requires routing info")
     endif
@@ -54,7 +59,6 @@ ifeq ($(MAKE_WITH_ORCHESTRA),1)
      $(error "Inconsistent configuration: NS rule and root rule conflicts!")
     endif
   endif
-
 
   # pass the Orchestra rules to the compiler
   CFLAGS += -DORCHESTRA_CONF_RULES="{&eb_per_time_source,$(ORCHESTRA_EXTRA_RULES),&default_common}"
