@@ -81,7 +81,7 @@ void orchestra_callback_root_node_updated(const linkaddr_t *root, uint8_t is_add
 /* Returns nonzero if the root slotframe should be used to transmit to the specific address */
 uint8_t orchestra_is_root_schedule_active(const linkaddr_t *addr);
 
-//ksh. alice time varying scheduling  //LF
+//ksh. (alice) time varying scheduling  //LF
 void alice_callback_slotframe_start (uint16_t a, uint16_t b);
 
 #endif /* __ORCHESTRA_H__ */

@@ -64,17 +64,6 @@ PROCESS_THREAD(node_process, ev, data)
   int is_coordinator;
 
   PROCESS_BEGIN();
-  /* Log configuration for pronting the routes *///  LF
-  LOG_INFO("Routing entries %u\n", uip_ds6_route_num_routes());
-  uip_ds6_route_t *route = uip_ds6_route_head();
-  while(route) {
-    LOG_INFO("Route ");
-    LOG_INFO_6ADDR(&route->ipaddr);
-    LOG_INFO_("/128 via ");
-    LOG_INFO_6ADDR(uip_ds6_route_nexthop(route));
-    LOG_INFO("\n");
-    route = uip_ds6_route_next(route);
-  }
 
   is_coordinator = 0;
 

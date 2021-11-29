@@ -62,6 +62,7 @@ static uint16_t local_channel_offset;
 static struct tsch_slotframe *sf_unicast;
 
 static void reschedule_unicast_slotframe(void);
+static void get_subtree_size(void);
 
 
 //#if UIP_MAX_ROUTES != 0
@@ -75,7 +76,7 @@ static void reschedule_unicast_slotframe(void);
 //ksh. alice time varying slotframe schedule
 //#define ALICE_TSCH_CALLBACK_SLOTFRAME_START alice_callback_slotframe_start 
 
-/*---------------------------------------------------------------------------*/ //OK
+/*---------------------------------------------------------------------------*/ // LF
 static uint16_t
 get_node_timeslot(const linkaddr_t *addr)
 {
@@ -86,7 +87,7 @@ get_node_timeslot(const linkaddr_t *addr)
     return 0xffff;
   }
 }
-/*---------------------------------------------------------------------------*/ //OK
+/*---------------------------------------------------------------------------*/  // LF
 static uint16_t
 get_node_channel_offset(const linkaddr_t *addr)
 {
@@ -100,12 +101,19 @@ get_node_channel_offset(const linkaddr_t *addr)
   }
 }
 
-/*---------------------------------------------------------------------------*/ //ksh. slotframe_callback. 
+/*---------------------------------------------------------------------------*/ //ksh. slotframe_callback.  LF
 #ifdef ALICE_TSCH_CALLBACK_SLOTFRAME_START
 void alice_callback_slotframe_start (uint16_t sfid, uint16_t sfsize){  
-  printf("RESCHEDULE CALLBACK\n");
-  asfn_schedule=sfid; //update curr asfn_schedule.
-  reschedule_unicast_slotframe();
+  //Before rescheduling check if there are packets in the queue and if the ASFN is increassed.
+  if (tsch_queue_global_packet_count() != 0 && sfid != asfn_schedule)
+  {
+    asfn_schedule=sfid; //update curr asfn_schedule.
+    printf("RESCHEDULE ASFN = %u\n", asfn_schedule);
+    reschedule_unicast_slotframe();
+  }
+  else{
+    asfn_schedule=sfid;
+  }
 }
 #endif
 
@@ -251,11 +259,12 @@ new_time_source(const struct tsch_neighbor *old, const struct tsch_neighbor *new
   }
 }
 
-/*---------------------------------------------------------------------------*/ //Time varying slotframe
-
+/*---------------------------------------------------------------------------*/ 
+//Time varying slotframe: Rescheduling of the unicast slotframe
 static void
 reschedule_unicast_slotframe(void)
 {
+  get_subtree_size();
   //reschedule all the links
   //linkaddr_t *local_addr = &linkaddr_node_addr; 
   struct tsch_link *l;
@@ -269,6 +278,23 @@ reschedule_unicast_slotframe(void)
     l = list_item_next(l);
   }
 
+}
+
+/*---------------------------------------------------------------------------*/ 
+static void
+get_subtree_size()
+{
+  /* Log configuration for pronting the routes *///  LF
+  LOG_INFO("Routing entries %u\n", uip_ds6_route_num_routes());
+  uip_ds6_route_t *route = uip_ds6_route_head();
+  while(route) {
+    LOG_INFO("Route ");
+    LOG_INFO_6ADDR(&route->ipaddr);
+    LOG_INFO_("/128 via ");
+    LOG_INFO_6ADDR(uip_ds6_route_nexthop(route));
+    LOG_INFO("\n");
+    route = uip_ds6_route_next(route);
+  }
 }
 
 /*---------------------------------------------------------------------------*/
