@@ -53,16 +53,18 @@
 #include "net/mac/tsch/tsch-log.h"
 #include "net/mac/tsch/tsch.c"
 
-#define DEBUG DEBUG_PRINT
+//#define DEBUG DEBUG_PRINT
 #include "net/net-debug.h"
 
 uint16_t asfn_schedule=0; //absolute slotframe number for ALICE time varying scheduling
 static uint16_t slotframe_handle = 0;
 static uint16_t local_channel_offset;
 static struct tsch_slotframe *sf_unicast;
+uint16_t current_class;
 
+#ifdef ALICE_TSCH_CALLBACK_SLOTFRAME_START
 static void reschedule_unicast_slotframe(void);
-static void get_subtree_size(void);
+#endif
 
 
 //#if UIP_MAX_ROUTES != 0
@@ -80,7 +82,6 @@ static void get_subtree_size(void);
 static uint16_t
 get_node_timeslot(const linkaddr_t *addr)
 {
-  printf("GET_NODE_TIMESLOT tvss-oscar\n");
   if(addr != NULL && ORCHESTRA_UNICAST_PERIOD > 0) {
     return real_hash((ORCHESTRA_LINKADDR_HASH(addr)+asfn_schedule), (ORCHESTRA_UNICAST_PERIOD));
   } else {
@@ -91,7 +92,6 @@ get_node_timeslot(const linkaddr_t *addr)
 static uint16_t
 get_node_channel_offset(const linkaddr_t *addr)
 {
-  printf("GET_NODE_CHANNEL_OFFSET tvss-oscar\n");
   int num_ch = (sizeof(TSCH_DEFAULT_HOPPING_SEQUENCE)/sizeof(uint8_t))-1;
 
   if(addr != NULL && ORCHESTRA_UNICAST_MAX_CHANNEL_OFFSET >= ORCHESTRA_UNICAST_MIN_CHANNEL_OFFSET && num_ch > 0) {
@@ -108,7 +108,7 @@ void alice_callback_slotframe_start (uint16_t sfid, uint16_t sfsize){
   if (tsch_queue_global_packet_count() != 0 && sfid != asfn_schedule)
   {
     asfn_schedule=sfid; //update curr asfn_schedule.
-    printf("RESCHEDULE ASFN = %u\n", asfn_schedule);
+    //printf("RESCHEDULE ASFN = %u\n", asfn_schedule);
     reschedule_unicast_slotframe();
   }
   else{
@@ -116,6 +116,39 @@ void alice_callback_slotframe_start (uint16_t sfid, uint16_t sfsize){
   }
 }
 #endif
+/*---------------------------------------------------------------------------*/ 
+// calculate the class of the node
+static uint16_t 
+get_node_class()
+{
+	uint16_t rpl_rank;
+	rpl_dag_t *dag = rpl_get_any_dag();
+	uint16_t subtree_size = uip_ds6_route_num_routes();
+	uint16_t new_class;  //root is class 0
+
+  if(dag != NULL && dag->instance != NULL) {
+		rpl_rank = dag->rank;
+	}
+	
+	if (subtree_size >= SUBTREE_THRESHOLD)
+	{
+		new_class = rpl_rank;
+	}
+	else
+	{
+		if(rpl_rank <= MAX_NODE_CLASS)
+		{
+			new_class = rpl_rank+1;
+		}
+    else
+    {
+      new_class = MAX_NODE_CLASS;
+    }
+	}
+  printf("NODE_CLASS_INFO (Current class) \trpl_rank = %u\t subtree_size = %u \t new_class = %u\n",rpl_rank,subtree_size,new_class);
+
+	return new_class;
+}
 
 /*---------------------------------------------------------------------------*/
 static int
@@ -136,7 +169,7 @@ neighbor_has_uc_link(const linkaddr_t *linkaddr)
 static void
 add_uc_link(const linkaddr_t *linkaddr)
 {
-  printf("ADD_UC_LINK vtss-oscar\n"); 
+  //printf("ADD_UC_LINK vtss-oscar\n"); 
   if(linkaddr != NULL) {
     linkaddr_t *local_addr = &linkaddr_node_addr;                 // LF
     local_channel_offset = get_node_channel_offset(local_addr);   // LF
@@ -212,12 +245,18 @@ static void
 child_added(const linkaddr_t *linkaddr)
 {
   add_uc_link(linkaddr);
+
+  current_class = get_node_class();
+  printf("CHILD ADDED Current class = %u\n",current_class);
 }
 /*---------------------------------------------------------------------------*/
 static void
 child_removed(const linkaddr_t *linkaddr)
 {
   remove_uc_link(linkaddr);
+
+  current_class = get_node_class();
+  printf("CHILD REMOVED Current class = %u\n",current_class);
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -260,11 +299,11 @@ new_time_source(const struct tsch_neighbor *old, const struct tsch_neighbor *new
 }
 
 /*---------------------------------------------------------------------------*/ 
+#ifdef ALICE_TSCH_CALLBACK_SLOTFRAME_START
 //Time varying slotframe: Rescheduling of the unicast slotframe
 static void
 reschedule_unicast_slotframe(void)
 {
-  get_subtree_size();
   //reschedule all the links
   //linkaddr_t *local_addr = &linkaddr_node_addr; 
   struct tsch_link *l;
@@ -279,37 +318,20 @@ reschedule_unicast_slotframe(void)
   }
 
 }
-
-/*---------------------------------------------------------------------------*/ 
-static void
-get_subtree_size()
-{
-  /* Log configuration for pronting the routes *///  LF
-  LOG_INFO("Routing entries %u\n", uip_ds6_route_num_routes());
-  uip_ds6_route_t *route = uip_ds6_route_head();
-  while(route) {
-    LOG_INFO("Route ");
-    LOG_INFO_6ADDR(&route->ipaddr);
-    LOG_INFO_("/128 via ");
-    LOG_INFO_6ADDR(uip_ds6_route_nexthop(route));
-    LOG_INFO("\n");
-    route = uip_ds6_route_next(route);
-  }
-}
-
+#endif
 /*---------------------------------------------------------------------------*/
 static void
 init(uint16_t sf_handle)
 {
-  printf("INIT tvss oscar\n");
   uint16_t timeslot;
   linkaddr_t *local_addr = &linkaddr_node_addr;
 
+  current_class = get_node_class();
+  printf("INIT Current class = %u\n",current_class);
+
   slotframe_handle = sf_handle;
   /* Slotframe for unicast transmissions */
-  
   sf_unicast = tsch_schedule_add_slotframe(slotframe_handle, ORCHESTRA_UNICAST_PERIOD);
-
   asfn_schedule = tsch_schedule_get_current_asfn(sf_unicast);//ksh..   LF
 
   local_channel_offset = get_node_channel_offset(local_addr);
@@ -330,4 +352,5 @@ struct orchestra_rule tvss_oscar = {
   NULL,
   "time varying slotframe schedule and oscar",
   ORCHESTRA_UNICAST_PERIOD,
+  get_node_class, // LF
 };

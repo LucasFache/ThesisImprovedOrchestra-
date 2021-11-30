@@ -68,13 +68,16 @@
 /**********************************************************************/
 /*******   configuration for time varying slotframe scheduling   ******/ //LF
 
-#define ALICE_TSCH_CALLBACK_SLOTFRAME_START alice_callback_slotframe_start //ksh. alice time varying slotframe schedule
+//#define ALICE_TSCH_CALLBACK_SLOTFRAME_START alice_callback_slotframe_start //ksh. alice time varying slotframe schedule
 
-#define ALICE_UNICAST_SF_ID 2 //slotframe handle of unicast slotframe
+//Using the optimized scheduling (base on OSCAR)
+//#define OPTIMIZED_SCHEDULING    1
 
-#define LOG_CONF_LEVEL_RPL LOG_LEVEL_DBG
+#define ALICE_UNICAST_SF_ID     2 //slotframe handle of unicast slotframe
 
-//#define LOG_CONF_WITH_ANNOTATE 1 //show RPL tree
+//#define LOG_CONF_LEVEL_RPL LOG_LEVEL_DBG
+
+#define LOG_CONF_WITH_ANNOTATE  1 //show RPL tree
 
 /**********************************************************************/
 

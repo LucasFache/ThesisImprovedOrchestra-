@@ -62,6 +62,9 @@ linkaddr_t orchestra_parent_linkaddr;
 /* Set to one only after getting an ACK for a DAO sent to our preferred parent */
 int orchestra_parent_knows_us = 0;
 
+/* Counter to update the class of the node */
+int packets_sent = 0;
+
 /* The set of Orchestra rules in use */
 const struct orchestra_rule *all_rules[] = ORCHESTRA_RULES;
 #define NUM_RULES (sizeof(all_rules) / sizeof(struct orchestra_rule *))
@@ -85,7 +88,21 @@ orchestra_packet_sent(int mac_status)
       orchestra_parent_knows_us = 1;
     }
   }
-  LOG_INFO("Packet has been sent\n");
+
+  packets_sent ++;
+
+  if(packets_sent == PACKET_THRESHOLD)
+  {
+    int i;
+    for(i = 0; i < NUM_RULES; i++) {
+      if(all_rules[i]->get_node_class != NULL) {
+        all_rules[i]->get_node_class();
+        printf("Current class updated after 5 packets sent\n");
+      }
+    }
+    packets_sent = 0;
+  }
+
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -98,7 +115,6 @@ orchestra_callback_child_added(const linkaddr_t *addr)
       all_rules[i]->child_added(addr);
     }
   }
-  LOG_INFO("Chiled is added\n");
   //schedule_unicast_slotframe(); //LF
 }
 /*---------------------------------------------------------------------------*/
@@ -112,7 +128,6 @@ orchestra_callback_child_removed(const linkaddr_t *addr)
       all_rules[i]->child_removed(addr);
     }
   }
-  LOG_INFO("Child is removed\n");
   //schedule_unicast_slotframe(); //LF
 
 }
@@ -120,7 +135,6 @@ orchestra_callback_child_removed(const linkaddr_t *addr)
 int
 orchestra_callback_packet_ready(void)
 {
-  LOG_INFO("orchestra_callback_packet_ready\n");
   int i;
   /* By default, use any slotframe, any timeslot */
   uint16_t slotframe = 0xffff;
@@ -153,7 +167,6 @@ orchestra_callback_packet_ready(void)
 void
 orchestra_callback_new_time_source(const struct tsch_neighbor *old, const struct tsch_neighbor *new)
 {
-  LOG_INFO("orchestra_callback_new_time_source\n");
   /* Orchestra assumes that the time source is also the RPL parent.
    * This is the case if the following is set:
    * #define RPL_CALLBACK_PARENT_SWITCH tsch_rpl_callback_parent_switch
@@ -199,5 +212,4 @@ orchestra_init(void)
       all_rules[i]->init(i);
     }
   }
-  LOG_INFO("Initialization done\n");
 }

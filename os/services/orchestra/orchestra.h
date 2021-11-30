@@ -51,6 +51,7 @@ struct orchestra_rule {
   void (* root_node_updated)(const linkaddr_t *addr, uint8_t is_added);
   const char *const name;
   const int16_t slotframe_size;
+  uint16_t (* get_node_class)(void); // LF
 };
 
 extern struct orchestra_rule tvss_oscar;

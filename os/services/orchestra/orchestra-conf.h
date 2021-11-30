@@ -182,4 +182,12 @@
 #define ORCHESTRA_UNICAST_MAX_CHANNEL_OFFSET       255
 #endif
 
+
+/* Rules needed for the optimized scheduler tvss + OSCAR to work */
+
+//Parameters for OSCAR algorithm
+#define SUBTREE_THRESHOLD   3
+#define MAX_NODE_CLASS      6
+#define PACKET_THRESHOLD    5
+
 #endif /* __ORCHESTRA_CONF_H__ */
