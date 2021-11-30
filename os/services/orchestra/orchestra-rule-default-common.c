@@ -87,4 +87,5 @@ struct orchestra_rule default_common = {
   NULL,
   "default common",
   ORCHESTRA_COMMON_SHARED_PERIOD,
+  NULL,
 };

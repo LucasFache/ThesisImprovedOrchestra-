@@ -249,6 +249,7 @@ struct orchestra_rule unicast_per_neighbor_rpl_storing = {
   NULL,
   "unicast per neighbor storing",
   ORCHESTRA_UNICAST_PERIOD,
+  NULL,
 };
 
 #endif /* UIP_MAX_ROUTES */

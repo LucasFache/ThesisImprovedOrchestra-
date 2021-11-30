@@ -117,18 +117,60 @@ void alice_callback_slotframe_start (uint16_t sfid, uint16_t sfsize){
 }
 #endif
 /*---------------------------------------------------------------------------*/ 
-// calculate the class of the node
-static uint16_t 
-get_node_class()
+//This method checks the new assigned class and changes the number of allocated slots when the class is changed.
+static void
+reschedule_timeslots(uint16_t new_class)
 {
-	uint16_t rpl_rank;
+  if(new_class == current_class)
+  {
+    return;
+  }
+
+  if(new_class < current_class)
+  {
+    //allocate_more_slots(); //not yet written
+  }
+  else
+  {
+    //reduce_allocated_slots(); //not yet written
+  }
+}
+/*---------------------------------------------------------------------------*/ 
+static uint16_t
+get_rpl_rank()
+{
 	rpl_dag_t *dag = rpl_get_any_dag();
-	uint16_t subtree_size = uip_ds6_route_num_routes();
-	uint16_t new_class;  //root is class 0
+  uint16_t rank;
 
   if(dag != NULL && dag->instance != NULL) {
-		rpl_rank = dag->rank;
+		rank = dag->rank;
 	}
+
+  uint16_t div = rank/100;
+ 
+  if (div <= 1)
+  {
+    return 1;
+  }
+  else
+  {
+    if(div > MAX_NODE_CLASS)
+    {
+      return 6;
+    }
+    else{
+      return div;
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/ 
+// calculate the class of the node
+static void 
+set_node_class()
+{
+	uint16_t rpl_rank = get_rpl_rank();
+	uint16_t subtree_size = uip_ds6_route_num_routes();
+	uint16_t new_class;  //root is class 0
 	
 	if (subtree_size >= SUBTREE_THRESHOLD)
 	{
@@ -136,7 +178,7 @@ get_node_class()
 	}
 	else
 	{
-		if(rpl_rank <= MAX_NODE_CLASS)
+		if(rpl_rank < MAX_NODE_CLASS)
 		{
 			new_class = rpl_rank+1;
 		}
@@ -147,7 +189,8 @@ get_node_class()
 	}
   printf("NODE_CLASS_INFO (Current class) \trpl_rank = %u\t subtree_size = %u \t new_class = %u\n",rpl_rank,subtree_size,new_class);
 
-	return new_class;
+  reschedule_timeslots(new_class);
+  current_class = new_class;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -246,7 +289,7 @@ child_added(const linkaddr_t *linkaddr)
 {
   add_uc_link(linkaddr);
 
-  current_class = get_node_class();
+  set_node_class();
   printf("CHILD ADDED Current class = %u\n",current_class);
 }
 /*---------------------------------------------------------------------------*/
@@ -255,7 +298,7 @@ child_removed(const linkaddr_t *linkaddr)
 {
   remove_uc_link(linkaddr);
 
-  current_class = get_node_class();
+  set_node_class();
   printf("CHILD REMOVED Current class = %u\n",current_class);
 }
 /*---------------------------------------------------------------------------*/
@@ -326,7 +369,7 @@ init(uint16_t sf_handle)
   uint16_t timeslot;
   linkaddr_t *local_addr = &linkaddr_node_addr;
 
-  current_class = get_node_class();
+  set_node_class();
   printf("INIT Current class = %u\n",current_class);
 
   slotframe_handle = sf_handle;
@@ -352,5 +395,5 @@ struct orchestra_rule tvss_oscar = {
   NULL,
   "time varying slotframe schedule and oscar",
   ORCHESTRA_UNICAST_PERIOD,
-  get_node_class, // LF
+  set_node_class,
 };

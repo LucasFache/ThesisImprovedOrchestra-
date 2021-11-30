@@ -95,8 +95,8 @@ orchestra_packet_sent(int mac_status)
   {
     int i;
     for(i = 0; i < NUM_RULES; i++) {
-      if(all_rules[i]->get_node_class != NULL) {
-        all_rules[i]->get_node_class();
+      if(all_rules[i]->set_node_class != NULL) {
+        all_rules[i]->set_node_class();
         printf("Current class updated after 5 packets sent\n");
       }
     }
