@@ -122,21 +122,24 @@ real_hash(uint16_t value, uint16_t mod){ //Thomas Wang method..
 }
 /*---------------------------------------------------------------------------*/// LF
 //ksh. remove link by timeslot and channel offset
+/*
 int
 tsch_schedule_remove_link_by_ts_choff(struct tsch_slotframe *slotframe, uint16_t timeslot, uint16_t channel_offset)
 {
   return slotframe != NULL &&
          tsch_schedule_remove_link(slotframe, tsch_schedule_get_link_by_ts_choff(slotframe, timeslot, channel_offset));
 }
+*/
 /*---------------------------------------------------------------------------*/
 //ksh. get link by timeslot and channel offset
+/*
 struct tsch_link *
 tsch_schedule_get_link_by_ts_choff(struct tsch_slotframe *slotframe, uint16_t timeslot, uint16_t channel_offset)
 {
   if(!tsch_is_locked()) {
     if(slotframe != NULL) {
       struct tsch_link *l = list_head(slotframe->links_list);
-      /* Loop over all items. Assume there is max one link per timeslot */
+      // Loop over all items. Assume there is max one link per timeslot
       while(l != NULL) {
         if(l->timeslot == timeslot && l->channel_offset == channel_offset) {
           return l;
@@ -148,6 +151,7 @@ tsch_schedule_get_link_by_ts_choff(struct tsch_slotframe *slotframe, uint16_t ti
   }
   return NULL;
 }
+*/
 /*---------------------------------------------------------------------------*/
 /* Removes all slotframes, resulting in an empty schedule */
 int
@@ -262,6 +266,7 @@ print_link_type(uint16_t link_type)
 }
 /*---------------------------------------------------------------------------*/ //LF
 //Time varying slotframe schedule
+/*
 #ifdef ALICE_TSCH_CALLBACK_SLOTFRAME_START
 //ksh. set link option by timeslot and channel offset
 struct tsch_link *
@@ -270,7 +275,7 @@ tsch_schedule_set_link_option_by_ts_choff(struct tsch_slotframe *slotframe, uint
   if(!tsch_is_locked()) {
     if(slotframe != NULL) {
       struct tsch_link *l = list_head(slotframe->links_list);
-      /* Loop over all items. Assume there is max one link per timeslot */
+      // Loop over all items. Assume there is max one link per timeslot
       while(l != NULL) {
         if(l->timeslot == timeslot && l->channel_offset == channel_offset) {
           l->link_options |= link_options;
@@ -283,6 +288,7 @@ tsch_schedule_set_link_option_by_ts_choff(struct tsch_slotframe *slotframe, uint
   return NULL;
 }
 #endif
+*/
 /*---------------------------------------------------------------------------*/
 /* Adds a link to a slotframe, return a pointer to it (NULL if failure) */
 struct tsch_link *
@@ -295,11 +301,13 @@ tsch_schedule_add_link(struct tsch_slotframe *slotframe,
     /* We currently support only one link per timeslot in a given slotframe. */
 
     //Time varying slotframe schedule //LF
+    /*
     #ifdef ALICE_TSCH_CALLBACK_SLOTFRAME_START //ksh sf update
         tsch_schedule_set_link_option_by_ts_choff(slotframe, timeslot, channel_offset, link_options);
     #else
         tsch_schedule_remove_link_by_ts_choff(slotframe, timeslot, channel_offset);
     #endif
+    */
 
     /* Validation of specified timeslot and channel_offset */
     if(timeslot > (slotframe->size.val - 1)) {
@@ -539,7 +547,6 @@ tsch_schedule_get_next_active_link(struct tsch_asn_t *asn, uint16_t *time_offset
 
     #ifdef ALICE_TSCH_CALLBACK_SLOTFRAME_START//ksh..
       tsch_schedule_alice_data_sf_reschedule(asn); //ALICE time varying scheduling
-      //printf("tsch_schedule_get_next_active_link rescheduling is called in the tsch-schedulle.c\n");
     #endif
 
     struct tsch_slotframe *sf = list_head(slotframe_list);

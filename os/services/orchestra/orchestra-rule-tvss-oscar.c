@@ -53,6 +53,8 @@
 #include "net/mac/tsch/tsch-log.h"
 #include "net/mac/tsch/tsch.c"
 
+#include "net/routing/rpl-classic/rpl-private.h"
+
 //#define DEBUG DEBUG_PRINT
 #include "net/net-debug.h"
 
@@ -61,6 +63,7 @@ static uint16_t slotframe_handle = 0;
 static uint16_t local_channel_offset;
 static struct tsch_slotframe *sf_unicast;
 uint16_t current_class;
+
 
 #ifdef ALICE_TSCH_CALLBACK_SLOTFRAME_START
 static void reschedule_unicast_slotframe(void);
@@ -83,7 +86,7 @@ static uint16_t
 get_node_timeslot(const linkaddr_t *addr)
 {
   if(addr != NULL && ORCHESTRA_UNICAST_PERIOD > 0) {
-    return real_hash((ORCHESTRA_LINKADDR_HASH(addr)+asfn_schedule), (ORCHESTRA_UNICAST_PERIOD));
+    return real_hash((ORCHESTRA_LINKADDR_HASH(addr)+asfn_schedule), (ORCHESTRA_UNICAST_PERIOD)); //+asfn_schedule
   } else {
     return 0xffff;
   }
@@ -95,7 +98,7 @@ get_node_channel_offset(const linkaddr_t *addr)
   int num_ch = (sizeof(TSCH_DEFAULT_HOPPING_SEQUENCE)/sizeof(uint8_t))-1;
 
   if(addr != NULL && ORCHESTRA_UNICAST_MAX_CHANNEL_OFFSET >= ORCHESTRA_UNICAST_MIN_CHANNEL_OFFSET && num_ch > 0) {
-    return 1+real_hash((ORCHESTRA_LINKADDR_HASH(addr)+asfn_schedule),num_ch);
+    return 1+real_hash((ORCHESTRA_LINKADDR_HASH(addr)+asfn_schedule),num_ch); //+asfn_schedule
   } else {
     return 0xffff;
   }
@@ -108,15 +111,25 @@ void alice_callback_slotframe_start (uint16_t sfid, uint16_t sfsize){
   if (tsch_queue_global_packet_count() != 0 && sfid != asfn_schedule)
   {
     asfn_schedule=sfid; //update curr asfn_schedule.
-    //printf("RESCHEDULE ASFN = %u\n", asfn_schedule);
+    printf("RESCHEDULE ASFN = %u\n", asfn_schedule);
     reschedule_unicast_slotframe();
   }
-  else{
-    asfn_schedule=sfid;
-  }
 }
-#endif
+#endif 
 /*---------------------------------------------------------------------------*/ 
+uint16_t
+is_root(){
+  rpl_instance_t *instance = rpl_get_default_instance();
+  if(instance!=NULL && instance->current_dag!=NULL){
+       uint16_t min_hoprankinc = instance->min_hoprankinc;
+       uint16_t rank=(uint16_t)instance->current_dag->rank;
+       if(min_hoprankinc == rank){
+          return 1;
+       }
+  }
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
 //This method checks the new assigned class and changes the number of allocated slots when the class is changed.
 static void
 reschedule_timeslots(uint16_t new_class)
@@ -152,41 +165,47 @@ get_rpl_rank()
   {
     return 1;
   }
+  else if(div > MAX_NODE_CLASS)
+  {
+    return 6;
+  }
   else
   {
-    if(div > MAX_NODE_CLASS)
-    {
-      return 6;
-    }
-    else{
       return div;
-    }
   }
 }
 /*---------------------------------------------------------------------------*/ 
-// calculate the class of the node
+/*
+* Calculate the class of the node
+* In the latest implementation the RPL-rank is not used to calculate the class of the node.
+*/
 static void 
 set_node_class()
 {
 	uint16_t rpl_rank = get_rpl_rank();
 	uint16_t subtree_size = uip_ds6_route_num_routes();
 	uint16_t new_class;  //root is class 0
-	
-	if (subtree_size >= SUBTREE_THRESHOLD)
-	{
-		new_class = rpl_rank;
-	}
-	else
-	{
-		if(rpl_rank < MAX_NODE_CLASS)
-		{
-			new_class = rpl_rank+1;
-		}
+
+  if (subtree_size == 0)
+  {
+    new_class = MAX_NODE_CLASS;
+  }
+  else if (is_root())
+  {
+    new_class = 1;
+  }
+  else 
+  {
+    if(subtree_size >= SUBTREE_THRESHOLD)
+    {
+      new_class = 2;
+    }
     else
     {
-      new_class = MAX_NODE_CLASS;
+      new_class = 3;
     }
-	}
+  }
+
   printf("NODE_CLASS_INFO (Current class) \trpl_rank = %u\t subtree_size = %u \t new_class = %u\n",rpl_rank,subtree_size,new_class);
 
   reschedule_timeslots(new_class);
@@ -212,7 +231,7 @@ neighbor_has_uc_link(const linkaddr_t *linkaddr)
 static void
 add_uc_link(const linkaddr_t *linkaddr)
 {
-  //printf("ADD_UC_LINK vtss-oscar\n"); 
+  printf("Routing going to add link.\n"); 
   if(linkaddr != NULL) {
     linkaddr_t *local_addr = &linkaddr_node_addr;                 // LF
     local_channel_offset = get_node_channel_offset(local_addr);   // LF
@@ -228,8 +247,9 @@ add_uc_link(const linkaddr_t *linkaddr)
      * Always configure the link with the local node's channel offset.
      * If this is an Rx link, that is what the node needs to use.
      * If this is a Tx link, packet's channel offset will override the link's channel offset.
-     */
-    tsch_schedule_add_link(sf_unicast, link_options, LINK_TYPE_NORMAL, &tsch_broadcast_address,
+     */ 
+    //&tsch_broadcast_address was used to set the address, but is not necessary broadcast is set if needed when link is used to set packet in queue
+    tsch_schedule_add_link(sf_unicast, link_options, LINK_TYPE_NORMAL, linkaddr,
           timeslot, local_channel_offset, 1);
   }
 }
@@ -237,18 +257,33 @@ add_uc_link(const linkaddr_t *linkaddr)
 static void
 remove_uc_link(const linkaddr_t *linkaddr)
 {
-  uint16_t timeslot;
-  struct tsch_link *l;
+  uint16_t timeslot = 0;
+  uint16_t timeslot_orchestra_parent;
 
   if(linkaddr == NULL) {
     return;
   }
 
-  timeslot = get_node_timeslot(linkaddr);
-  l = tsch_schedule_get_link_by_timeslot(sf_unicast, timeslot, local_channel_offset);
-  if(l == NULL) {
+  struct tsch_link *l = list_head(sf_unicast->links_list);
+
+  while(l!=NULL) { 
+    if(&l->addr == linkaddr)
+    {
+      printf("FOUND ADDRESS!!!!!!!!\n");
+      timeslot = l->timeslot;
+    }
+    if(&l->addr == &orchestra_parent_linkaddr)
+    {
+      timeslot_orchestra_parent = l->timeslot;
+    }
+    l = list_item_next(l);
+  }
+
+  // Did not find linkaddr in the slotframe link_list.
+  if(timeslot == 0) {
     return;
   }
+
   if(!ORCHESTRA_UNICAST_SENDER_BASED) {
     /* Packets to this address were marked with this slotframe and neighbor-specific timeslot;
      * make sure they don't remain stuck in the queues after the link is removed. */
@@ -256,19 +291,28 @@ remove_uc_link(const linkaddr_t *linkaddr)
   }
 
   /* Does our current parent need this timeslot? */
-  if(timeslot == get_node_timeslot(&orchestra_parent_linkaddr)) {
+  if(timeslot == timeslot_orchestra_parent) {
     /* Yes, this timeslot is being used, return */
     return;
   }
+
   /* Does any other child need this timeslot?
    * (lookup all route next hops) */
   nbr_table_item_t *item = nbr_table_head(nbr_routes);
   while(item != NULL) {
     linkaddr_t *addr = nbr_table_get_lladdr(nbr_routes, item);
-    if(timeslot == get_node_timeslot(addr)) {
-      /* Yes, this timeslot is being used, return */
-      return;
+    
+    struct tsch_link *ll = list_head(sf_unicast->links_list);
+
+    while(ll!=NULL) { 
+      if(&ll->addr == addr)
+      {
+        /* Yes, this timeslot is being used, return */
+        return;
+      }
+      ll = list_item_next(ll);
     }
+
     item = nbr_table_next(nbr_routes, item);
   }
 
@@ -349,13 +393,28 @@ reschedule_unicast_slotframe(void)
 {
   //reschedule all the links
   //linkaddr_t *local_addr = &linkaddr_node_addr; 
+
   struct tsch_link *l;
   l = list_head(sf_unicast->links_list);
 
   while(l!=NULL) {    
+    /*
     const linkaddr_t *linkaddr = &l->addr;
-    l->timeslot = get_node_timeslot(linkaddr);
-    l->channel_offset = get_node_channel_offset(linkaddr);
+
+    uint16_t timeslot = get_node_timeslot(linkaddr);
+    uint16_t local_channel_offset = get_node_channel_offset(local_addr);
+
+    uint8_t link_options = ORCHESTRA_UNICAST_SENDER_BASED ? LINK_OPTION_RX : LINK_OPTION_TX | UNICAST_SLOT_SHARED_FLAG;
+
+    if(timeslot == get_node_timeslot(&linkaddr_node_addr)) {
+      link_options |= ORCHESTRA_UNICAST_SENDER_BASED ? LINK_OPTION_TX | UNICAST_SLOT_SHARED_FLAG: LINK_OPTION_RX;
+    }
+    
+    l->timeslot = timeslot;
+    l->channel_offset = local_channel_offset;
+    l->link_options = link_options;
+    */
+    printf("timeslot = %u \t channel_offset = %u\n",l->timeslot,l->channel_offset);
     //l = l->next;
     l = list_item_next(l);
   }

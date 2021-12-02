@@ -339,6 +339,7 @@ uip_ds6_route_t *
 uip_ds6_route_add(const uip_ipaddr_t *ipaddr, uint8_t length,
                   const uip_ipaddr_t *nexthop)
 {
+  printf("Routing uip_ds6_route_add");
 #if (UIP_MAX_ROUTES != 0)
   uip_ds6_route_t *r;
   struct uip_ds6_route_neighbor_route *nbrr;
@@ -411,6 +412,8 @@ uip_ds6_route_add(const uip_ipaddr_t *ipaddr, uint8_t length,
     */
     routes = nbr_table_get_from_lladdr(nbr_routes,
                                        (linkaddr_t *)nexthop_lladdr);
+
+    printf("Routing: routes = %u number of routes \n", routes);
 
     if(routes == NULL) {
       /* If the neighbor did not have an entry in our neighbor table,

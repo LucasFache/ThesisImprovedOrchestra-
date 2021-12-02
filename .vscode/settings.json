@@ -1,3 +1,11 @@
 {
-    "C_Cpp.errorSquiggles": "Disabled"
+    "C_Cpp.errorSquiggles": "Disabled",
+    "files.associations": {
+        "*.tcc": "cpp",
+        "functional": "cpp",
+        "fstream": "cpp",
+        "istream": "cpp",
+        "streambuf": "cpp",
+        "uip-ds6-route.h": "c"
+    }
 }
