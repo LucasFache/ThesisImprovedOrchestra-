@@ -59,6 +59,7 @@
 #include "net/net-debug.h"
 
 uint16_t asfn_schedule=0; //absolute slotframe number for ALICE time varying scheduling
+uint16_t nbr_extra_tx_slots = 0;
 static uint16_t slotframe_handle = 0;
 static uint16_t local_channel_offset;
 static struct tsch_slotframe *sf_unicast;
@@ -116,6 +117,59 @@ void alice_callback_slotframe_start (uint16_t sfid, uint16_t sfsize){
   }
 }
 #endif 
+/*---------------------------------------------------------------------------*/
+static void
+allocate_more_slots(uint16_t new_class)
+{
+  uint16_t nbr_tx_slots = 0;
+  if(new_class == 1) nbr_tx_slots = 3;
+  if(new_class == 2) nbr_tx_slots = 2;
+  if(new_class == 3) nbr_tx_slots = 1;
+
+  while(nbr_extra_tx_slots < nbr_tx_slots)
+  {
+    nbr_extra_tx_slots++;
+    printf("Routing class = %u added an extra slot nbr: %u\n",new_class,nbr_extra_tx_slots);
+    linkaddr_t *local_addr = &linkaddr_node_addr;                 
+    local_channel_offset = get_node_channel_offset(local_addr);   
+    uint16_t timeslot = get_node_timeslot(&tsch_broadcast_address);
+    uint8_t link_options = ORCHESTRA_UNICAST_SENDER_BASED ? LINK_OPTION_RX : LINK_OPTION_TX | UNICAST_SLOT_SHARED_FLAG;
+
+    if(timeslot == get_node_timeslot(&linkaddr_node_addr)) {
+      /* This is also our timeslot, add necessary flags */
+      link_options |= ORCHESTRA_UNICAST_SENDER_BASED ? LINK_OPTION_TX | UNICAST_SLOT_SHARED_FLAG: LINK_OPTION_RX;
+    }
+    tsch_schedule_add_link(sf_unicast, link_options, LINK_TYPE_NORMAL, &tsch_broadcast_address,
+          timeslot, local_channel_offset, 1);
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
+reduce_allocated_slots(uint16_t new_class)
+{
+  uint16_t nbr_tx_slots = 0;
+  if(new_class == 1) nbr_tx_slots = 3;
+  if(new_class == 2) nbr_tx_slots = 2;
+  if(new_class == 3) nbr_tx_slots = 1;
+
+  while(nbr_extra_tx_slots > nbr_tx_slots)
+  {
+    nbr_extra_tx_slots--;
+    printf("Routing class = %u REMOVED an extra slot nbr: %u\n",new_class,nbr_extra_tx_slots);
+    
+    struct tsch_link *l = list_head(sf_unicast->links_list);
+
+    while(l!=NULL) { 
+      if(&l->addr == &tsch_broadcast_address)
+      {
+        tsch_schedule_remove_link(sf_unicast, l);
+        break;
+      }
+      l = list_item_next(l);
+    }    
+  }
+}
+/*---------------------------------------------------------------------------*/ 
 /*---------------------------------------------------------------------------*/ 
 uint16_t
 is_root(){
@@ -141,11 +195,11 @@ reschedule_timeslots(uint16_t new_class)
 
   if(new_class < current_class)
   {
-    //allocate_more_slots(); //not yet written
+    allocate_more_slots(new_class);
   }
   else
   {
-    //reduce_allocated_slots(); //not yet written
+    reduce_allocated_slots(new_class);
   }
 }
 /*---------------------------------------------------------------------------*/ 
@@ -231,7 +285,6 @@ neighbor_has_uc_link(const linkaddr_t *linkaddr)
 static void
 add_uc_link(const linkaddr_t *linkaddr)
 {
-  printf("Routing going to add link.\n"); 
   if(linkaddr != NULL) {
     linkaddr_t *local_addr = &linkaddr_node_addr;                 // LF
     local_channel_offset = get_node_channel_offset(local_addr);   // LF
@@ -242,7 +295,6 @@ add_uc_link(const linkaddr_t *linkaddr)
       /* This is also our timeslot, add necessary flags */
       link_options |= ORCHESTRA_UNICAST_SENDER_BASED ? LINK_OPTION_TX | UNICAST_SLOT_SHARED_FLAG: LINK_OPTION_RX;
     }
-
     /* Add/update link.
      * Always configure the link with the local node's channel offset.
      * If this is an Rx link, that is what the node needs to use.
@@ -269,12 +321,13 @@ remove_uc_link(const linkaddr_t *linkaddr)
   while(l!=NULL) { 
     if(&l->addr == linkaddr)
     {
-      printf("FOUND ADDRESS!!!!!!!!\n");
       timeslot = l->timeslot;
+      break;
     }
     if(&l->addr == &orchestra_parent_linkaddr)
     {
       timeslot_orchestra_parent = l->timeslot;
+      break;
     }
     l = list_item_next(l);
   }
@@ -332,18 +385,14 @@ static void
 child_added(const linkaddr_t *linkaddr)
 {
   add_uc_link(linkaddr);
-
   set_node_class();
-  printf("CHILD ADDED Current class = %u\n",current_class);
 }
 /*---------------------------------------------------------------------------*/
 static void
 child_removed(const linkaddr_t *linkaddr)
 {
   remove_uc_link(linkaddr);
-
   set_node_class();
-  printf("CHILD REMOVED Current class = %u\n",current_class);
 }
 /*---------------------------------------------------------------------------*/
 static int
