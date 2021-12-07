@@ -518,9 +518,9 @@ void tsch_schedule_alice_data_sf_reschedule(struct tsch_asn_t *asn){  //ksh..
 
             uint16_t limitSFID = (uint16_t)(65535/(uint16_t)sf->size.val); //65535= 4Byte max value
             if(currSFID==limitSFID){
-               ALICE_TSCH_CALLBACK_SLOTFRAME_START(0, (uint16_t)sf->size.val);
+              ALICE_TSCH_CALLBACK_SLOTFRAME_START(0, (uint16_t)sf->size.val);
             }else{
-               ALICE_TSCH_CALLBACK_SLOTFRAME_START(currSFID+1, (uint16_t)sf->size.val);
+              ALICE_TSCH_CALLBACK_SLOTFRAME_START(currSFID+1, (uint16_t)sf->size.val);
             }
          }
          break;

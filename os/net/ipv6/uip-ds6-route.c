@@ -339,7 +339,7 @@ uip_ds6_route_t *
 uip_ds6_route_add(const uip_ipaddr_t *ipaddr, uint8_t length,
                   const uip_ipaddr_t *nexthop)
 {
-  printf("Routing uip_ds6_route_add");
+  printf("Routing uip_ds6_route_add \t");
 #if (UIP_MAX_ROUTES != 0)
   uip_ds6_route_t *r;
   struct uip_ds6_route_neighbor_route *nbrr;
@@ -465,7 +465,7 @@ uip_ds6_route_add(const uip_ipaddr_t *ipaddr, uint8_t length,
     r->neighbor_routes = routes;
     num_routes++;
 
-    LOG_INFO("Add: num %d\n", num_routes);
+    LOG_INFO("Routing Add: num %d\n", num_routes);
 
     /* lock this entry so that nexthop is not removed */
     nbr_table_lock(nbr_routes, routes);

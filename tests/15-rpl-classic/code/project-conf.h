@@ -28,3 +28,20 @@
  */
 #define TCPIP_CONF_ANNOTATE_TRANSMISSIONS 1
 #define LOG_CONF_LEVEL_RPL LOG_LEVEL_INFO
+
+
+/**********************************************************************/
+/*******   configuration for time varying slotframe scheduling   ******/
+
+//#define ALICE_TSCH_CALLBACK_SLOTFRAME_START alice_callback_slotframe_start //alice time varying slotframe schedule
+
+//Using the optimized scheduling (base on OSCAR)
+//#define OPTIMIZED_SCHEDULING    1
+
+#define ALICE_UNICAST_SF_ID     2 //slotframe handle of unicast slotframe
+
+//#define LOG_CONF_LEVEL_RPL LOG_LEVEL_DBG
+
+#define LOG_CONF_WITH_ANNOTATE  1 //show RPL tree
+
+/**********************************************************************/

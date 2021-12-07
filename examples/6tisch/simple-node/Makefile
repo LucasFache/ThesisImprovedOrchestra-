@@ -22,8 +22,6 @@ MAKE_WITH_TVSS_OSCAR ?= 1
 
 MAKE_MAC = MAKE_MAC_TSCH
 MAKE_ROUTING = MAKE_ROUTING_RPL_CLASSIC
-#MODULES += os/services/orchestra
-#ORCHESTRA_EXTRA_RULES = &tvss_oscar #&unicast_per_neighbor_rpl_storing
 
 include $(CONTIKI)/Makefile.dir-variables
 MODULES += $(CONTIKI_NG_SERVICES_DIR)/shell

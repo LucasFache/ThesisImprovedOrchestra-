@@ -68,7 +68,7 @@
 /**********************************************************************/
 /*******   configuration for time varying slotframe scheduling   ******/ //LF
 
-//#define ALICE_TSCH_CALLBACK_SLOTFRAME_START alice_callback_slotframe_start //ksh. alice time varying slotframe schedule
+#define ALICE_TSCH_CALLBACK_SLOTFRAME_START alice_callback_slotframe_start //ksh. alice time varying slotframe schedule
 
 //Using the optimized scheduling (base on OSCAR)
 //#define OPTIMIZED_SCHEDULING    1

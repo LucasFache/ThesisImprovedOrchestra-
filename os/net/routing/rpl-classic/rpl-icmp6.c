@@ -638,9 +638,7 @@ dio_output(rpl_instance_t *instance, uip_ipaddr_t *uc_addr)
 static void
 dao_input_storing(void)
 {
-  LOG_INFO("BREADCRUM dao_input_storing\n");
 #if RPL_WITH_STORING
-  printf("BREADCRUM RPL_WITH_STORING dao_input_storing\n");
   uip_ipaddr_t dao_sender_addr;
   rpl_dag_t *dag;
   rpl_instance_t *instance;
@@ -855,7 +853,7 @@ dao_input_storing(void)
   }
 
   rep = rpl_add_route(dag, &prefix, prefixlen, &dao_sender_addr);
-  printf("BREADCRUM rpl_ad_route  rep = %u",rep);
+  printf("Routing rpl_ad_route  rep = %u",rep);
   
   if(rep == NULL) {
     RPL_STAT(rpl_stats.mem_overflows++);
@@ -1058,7 +1056,7 @@ dao_input_nonstoring(void)
 static void
 dao_input(void)
 {
-  printf("BREADCRUM dao_input\n");
+  printf("Routing BREADCRUM dao_input\n");
   rpl_instance_t *instance;
   uint8_t instance_id;
 
@@ -1077,7 +1075,6 @@ dao_input(void)
 
   if(RPL_IS_STORING(instance)) {
     dao_input_storing();
-    //printf("FIRST BREADCRUM RPL_IS_STORING dao_input\n");  // LF
   } else if(RPL_IS_NON_STORING(instance)) {
     dao_input_nonstoring();
   }

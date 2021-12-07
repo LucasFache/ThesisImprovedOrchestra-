@@ -90,7 +90,7 @@ orchestra_packet_sent(int mac_status)
   }
 
   packets_sent ++;
-
+  // Updating the class of the node every 5 packets sent.
   if(packets_sent == PACKET_THRESHOLD)
   {
     int i;
@@ -115,7 +115,6 @@ orchestra_callback_child_added(const linkaddr_t *addr)
       all_rules[i]->child_added(addr);
     }
   }
-  //schedule_unicast_slotframe(); //LF
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -128,8 +127,6 @@ orchestra_callback_child_removed(const linkaddr_t *addr)
       all_rules[i]->child_removed(addr);
     }
   }
-  //schedule_unicast_slotframe(); //LF
-
 }
 /*---------------------------------------------------------------------------*/
 int
