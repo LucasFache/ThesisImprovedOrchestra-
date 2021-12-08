@@ -54,6 +54,13 @@ struct orchestra_rule {
   void (* set_node_class)(void); // LF
 };
 
+/* lijst die tijdelijk de adressen bijhoud */
+typedef struct linkaddr_list {
+    linkaddr_t addr;
+    uint8_t link_options;
+    struct linkaddr_list * next;
+} linkaddr_list_t;
+
 extern struct orchestra_rule tvss_oscar;
 extern struct orchestra_rule eb_per_time_source;
 extern struct orchestra_rule unicast_per_neighbor_rpl_storing;

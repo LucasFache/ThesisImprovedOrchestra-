@@ -54,6 +54,7 @@
 #include "net/mac/tsch/tsch.c"
 
 #include "net/routing/rpl-classic/rpl-private.h"
+#include "stdlib.h"
 
 //#define DEBUG DEBUG_PRINT
 #include "net/net-debug.h"
@@ -319,8 +320,6 @@ remove_uc_link(const linkaddr_t *linkaddr)
   }
 
   struct tsch_link *l = list_head(sf_unicast->links_list);
-
-
   // Searching for the link in the linklist
   while(l!=NULL) { 
     if(&l->addr == linkaddr){
@@ -441,25 +440,48 @@ new_time_source(const struct tsch_neighbor *old, const struct tsch_neighbor *new
 static void
 reschedule_unicast_slotframe(void)
 {
+  printf("Routing RESCHEDULING\n");
   //reschedule all the links
-  linkaddr_t *local_addr = &linkaddr_node_addr; 
+  //linkaddr_t *local_addr = &linkaddr_node_addr; 
 
-  struct tsch_link *l;
-  l = list_head(sf_unicast->links_list);
+  linkaddr_list_t * head = NULL;
+  linkaddr_list_t * link = NULL;
+  head = (linkaddr_list_t *) malloc(sizeof(linkaddr_list_t));
+  struct tsch_link *ll = list_head(sf_unicast->links_list);
+  link = head;
+
+  while(ll!=NULL) {    
+    link->addr = ll->addr;
+    link->link_options = ll->link_options;
+    link->next = (linkaddr_list_t *) malloc(sizeof(linkaddr_list_t));
+    // for testing without impacting the scheduler
+    // you can disable the two lines underneed, disable line 479 and enable line 461
+    tsch_schedule_remove_link(sf_unicast, ll);
+    ll = list_head(sf_unicast->links_list);
+    printf("Routing Link-option = %u\n",link->link_options);
+    //ll = ll->next;
+    link = link->next;
+  }
+
+
+  link = head;
+  
   //printf("TVSS list = %u \n",l->timeslot);
-
-  while(l!=NULL) {    
-    const linkaddr_t *linkaddr = &l->addr;
-
+  while(link!=NULL) {    
+    printf("Routing HEAD Link-option head = %u\n",link->link_options);
+    
+    const linkaddr_t *linkaddr = &link->addr;
     uint16_t timeslot = get_node_timeslot(linkaddr);
     uint16_t local_channel_offset = get_node_channel_offset(local_addr);
-
-    l->timeslot = timeslot;
-    l->channel_offset = local_channel_offset;
-
+    uint8_t link_options = link->link_options;
+     printf("Routing ADDR = %p, timeslot = %u, channel_off = %u, linkoptions = %u \n",link->addr, timeslot,local_channel_offset,link_options);
+    
+    tsch_schedule_add_link(sf_unicast, link_options, LINK_TYPE_NORMAL, linkaddr, timeslot, local_channel_offset, 1);
     //printf(" TVSS timeslot = %u \t channel_offset = %u  \t new timeslot = %u new channel_offset = %u  asfn = %u\n",l->timeslot,l->channel_offset,timeslot,local_channel_offset,asfn_schedule);
-    l = l->next;
-    //l = list_item_next(l);
+    //link = link->next;
+    printf("Routing HEAD Link-option head = %u\n",link->link_options);
+    link = list_item_next(link);
+    
   }
 }
 #endif
