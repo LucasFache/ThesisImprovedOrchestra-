@@ -153,7 +153,7 @@ int TSCH_CALLBACK_PACKET_READY(void);
 void TSCH_CALLBACK_ROOT_NODE_UPDATED(const linkaddr_t *, uint8_t is_added);
 #endif /* TSCH_CALLBACK_ROOT_NODE_UPDATED */
 
-/***ksh.. real hash, Thomas Wang, 32-bit integer mix function ***/
+/***ksh.. real hash, Thomas Wang, 32-bit integer mix function ***///  LF
 uint16_t real_hash(uint16_t value, uint16_t mod);
 
 /***** External Variables *****/
@@ -201,6 +201,14 @@ PROCESS_NAME(tsch_pending_events_process);
 
 /********** Functions *********/
 
+/**
+ * 
+ * This method is used to measure the incomming traffic load.
+ * when the rx_packet_count is asked the count is set to zero 
+ * this way you can measure the incomming traffic load for each timeinterval
+ *  LF
+ */
+int get_rx_packet_count();
 /**
  * Set the TSCH join priority (JP)
  *

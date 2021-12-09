@@ -135,6 +135,9 @@ static clock_time_t tsch_current_eb_period;
 /* Current period for keepalive output */
 static clock_time_t tsch_current_ka_timeout;
 
+/* Current packet count at given interval  This is used for capturing the traffic load */// LF
+int rx_packet_count = 0;
+
 /* For scheduling keepalive messages  */
 enum tsch_keepalive_status {
   KEEPALIVE_SCHEDULING_UNCHANGED,
@@ -165,6 +168,14 @@ static void packet_input(void);
 
 /* Getters and setters */
 
+/*---------------------------------------------------------------------------*/// LF
+int
+get_rx_packet_count()
+{
+  int temp_count = rx_packet_count;
+  rx_packet_count = 0;
+  return temp_count;
+}
 /*---------------------------------------------------------------------------*/
 void
 tsch_set_coordinator(int enable)
@@ -521,6 +532,9 @@ tsch_rx_process_pending()
     } else if(is_eb) {
       eb_input(current_input);
     }
+
+    /* Increase the received packet count - used to measure incomming traffic load *///  LF
+    rx_packet_count++;
 
     /* Remove input from ringbuf */
     ringbufindex_get(&input_ringbuf);

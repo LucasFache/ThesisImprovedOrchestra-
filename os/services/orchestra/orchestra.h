@@ -91,5 +91,7 @@ uint8_t orchestra_is_root_schedule_active(const linkaddr_t *addr);
 
 //ksh. (alice) time varying scheduling  //LF
 void alice_callback_slotframe_start (uint16_t a, uint16_t b);
+/* Returns the packet count */
+int get_packet_count();
 
 #endif /* __ORCHESTRA_H__ */

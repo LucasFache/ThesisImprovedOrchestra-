@@ -59,18 +59,22 @@
 //#define DEBUG DEBUG_PRINT
 #include "net/net-debug.h"
 
-uint16_t asfn_schedule=0; //absolute slotframe number for ALICE time varying scheduling
+/* The absolute slotframe number for ALICE time varying scheduling */
+uint16_t asfn_schedule=0; 
 uint16_t nbr_extra_tx_slots = 0;
 static uint16_t slotframe_handle = 0;
 static uint16_t local_channel_offset;
 static struct tsch_slotframe *sf_unicast;
+/* The current class of the node */
 uint16_t current_class;
+
+/* The incoming packet count at a fixed time interval to measure the incoming traffic load */
+int packet_count = 0;
 
 
 #ifdef ALICE_TSCH_CALLBACK_SLOTFRAME_START
 static void reschedule_unicast_slotframe(void);
 #endif
-
 
 //#if UIP_MAX_ROUTES != 0
 
@@ -79,6 +83,9 @@ static void reschedule_unicast_slotframe(void);
 #else
 #define UNICAST_SLOT_SHARED_FLAG      LINK_OPTION_SHARED
 #endif
+
+/* In this thread the incoming traffic load is measured */
+PROCESS(traffic_load_process,"traffic load");
 
 /*---------------------------------------------------------------------------*/ // LF
 static uint16_t
@@ -116,6 +123,7 @@ void alice_callback_slotframe_start (uint16_t sfid, uint16_t sfsize)
 }
 #endif 
 /*---------------------------------------------------------------------------*/
+// Increase the number of allocated slots according to the class of the node.
 static void
 allocate_more_slots(uint16_t new_class)
 {
@@ -126,7 +134,7 @@ allocate_more_slots(uint16_t new_class)
 
   while(nbr_extra_tx_slots < nbr_tx_slots) {
     nbr_extra_tx_slots++;
-    printf("Routing class = %u added an extra slot nbr: %u\n",new_class,nbr_extra_tx_slots);
+    //printf("Routing class = %u added an extra slot nbr: %u\n",new_class,nbr_extra_tx_slots);
     linkaddr_t *local_addr = &linkaddr_node_addr;                 
     local_channel_offset = get_node_channel_offset(local_addr);   
     uint16_t timeslot = get_node_timeslot(&tsch_broadcast_address);
@@ -143,6 +151,7 @@ allocate_more_slots(uint16_t new_class)
   }
 }
 /*---------------------------------------------------------------------------*/
+// Reduce the number of allocated slots according to the class of the node.
 static void
 reduce_allocated_slots(uint16_t new_class)
 {
@@ -158,7 +167,7 @@ reduce_allocated_slots(uint16_t new_class)
 
   while(nbr_extra_tx_slots > nbr_tx_slots) {
     nbr_extra_tx_slots--;
-    printf("Routing class = %u REMOVED an extra slot nbr: %u\n",new_class,nbr_extra_tx_slots);
+    //printf("Routing class = %u REMOVED an extra slot nbr: %u\n",new_class,nbr_extra_tx_slots);
     
     struct tsch_link *l = list_head(sf_unicast->links_list);
 
@@ -185,6 +194,7 @@ reduce_allocated_slots(uint16_t new_class)
 }
 /*---------------------------------------------------------------------------*/ 
 /*---------------------------------------------------------------------------*/ 
+// Check to see if the node is a root node.
 uint16_t
 is_root(){
   rpl_instance_t *instance = rpl_get_default_instance();
@@ -198,7 +208,7 @@ is_root(){
   return 0;
 }
 /*---------------------------------------------------------------------------*/
-//This method checks the new assigned class and changes the number of allocated slots when the class is changed.
+// This method checks the new assigned class and changes the number of allocated slots when the class is changed.
 static void
 reschedule_timeslots(uint16_t new_class)
 {
@@ -214,6 +224,7 @@ reschedule_timeslots(uint16_t new_class)
   }
 }
 /*---------------------------------------------------------------------------*/ 
+// At this point the rpl-rk is not used to calculate the class. This option can be enabled when using more classes and when you are dealing with bigger networks.
 static uint16_t
 get_rpl_rank()
 {
@@ -246,7 +257,9 @@ set_node_class()
 {
 	uint16_t rpl_rank = get_rpl_rank();
 	uint16_t subtree_size = uip_ds6_route_num_routes();
-	uint16_t new_class;  //root is class 1
+	uint16_t new_class;  //root is class 1 max class is 4
+
+  //printf("Routing PACKET_COUNT = %u\n",packet_count);
 
   if (subtree_size == 0) {
     new_class = MAX_NODE_CLASS;
@@ -255,7 +268,7 @@ set_node_class()
     new_class = 1;
   }
   else {
-    if(subtree_size >= SUBTREE_THRESHOLD) {
+    if(subtree_size >= SUBTREE_THRESHOLD || packet_count > TRAFFIC_LOAD_THRESHOLD) {
       new_class = 2;
     }
     else { 
@@ -263,7 +276,7 @@ set_node_class()
     }
   }
 
-  printf("NODE_CLASS_INFO (Current class) \trpl_rank = %u\t subtree_size = %u \t new_class = %u\n",rpl_rank,subtree_size,new_class);
+  //printf("NODE_CLASS_INFO (Current class) \trpl_rank = %u\t subtree_size = %u \t new_class = %u\n",rpl_rank,subtree_size,new_class);
 
   reschedule_timeslots(new_class);
   current_class = new_class;
@@ -435,14 +448,14 @@ new_time_source(const struct tsch_neighbor *old, const struct tsch_neighbor *new
 }
 
 /*---------------------------------------------------------------------------*/ 
+// Time varying slotframe: Rescheduling of the unicast slotframe
 #ifdef ALICE_TSCH_CALLBACK_SLOTFRAME_START
-//Time varying slotframe: Rescheduling of the unicast slotframe
 static void
 reschedule_unicast_slotframe(void)
 {
   printf("Routing RESCHEDULING\n");
   //reschedule all the links
-  //linkaddr_t *local_addr = &linkaddr_node_addr; 
+  linkaddr_t *local_addr = &linkaddr_node_addr; 
 
   linkaddr_list_t * head = NULL;
   linkaddr_list_t * link = NULL;
@@ -486,12 +499,43 @@ reschedule_unicast_slotframe(void)
 }
 #endif
 /*---------------------------------------------------------------------------*/
+/**
+ * This thread will retrieve the number of incoming packets at a fixed time intervall
+ */
+PROCESS_THREAD(traffic_load_process, ev, data)
+{
+  PROCESS_BEGIN();
+
+  static struct etimer timer;
+  etimer_set(&timer, CLOCK_SECOND * 30); // Every 30 seconds
+
+  while(1) {
+    int temp_packet_count = packet_count;
+    packet_count = get_rx_packet_count();
+    etimer_reset(&timer);
+    if(packet_count == 0 && current_class < MAX_NODE_CLASS){
+      //printf("Routing HIGHER CLASS IS SET\n");
+      reschedule_timeslots(current_class+1);
+      current_class++;
+    }
+    else if (temp_packet_count == 0 && packet_count != 0){
+      //printf("Routing BACK TO INITIAL CLASS\n");
+      set_node_class();
+    }
+
+    PROCESS_WAIT_UNTIL(etimer_expired(&timer));
+  }
+
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
 static void
 init(uint16_t sf_handle)
 {
   uint16_t timeslot;
   linkaddr_t *local_addr = &linkaddr_node_addr;
 
+  process_start(&traffic_load_process, NULL);
   set_node_class();
   printf("INIT Current class = %u\n",current_class);
 

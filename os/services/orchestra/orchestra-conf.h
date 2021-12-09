@@ -186,8 +186,9 @@
 /* Rules needed for the optimized scheduler tvss + OSCAR to work */
 
 //Parameters for OSCAR algorithm
-#define SUBTREE_THRESHOLD   3
-#define MAX_NODE_CLASS      4
-#define PACKET_THRESHOLD    5
+#define SUBTREE_THRESHOLD       3
+#define TRAFFIC_LOAD_THRESHOLD  10 
+#define MAX_NODE_CLASS          4
+#define PACKET_THRESHOLD        5
 
 #endif /* __ORCHESTRA_CONF_H__ */

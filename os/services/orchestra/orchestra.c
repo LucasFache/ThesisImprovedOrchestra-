@@ -68,7 +68,6 @@ int packets_sent = 0;
 /* The set of Orchestra rules in use */
 const struct orchestra_rule *all_rules[] = ORCHESTRA_RULES;
 #define NUM_RULES (sizeof(all_rules) / sizeof(struct orchestra_rule *))
-
 /*---------------------------------------------------------------------------*/
 static void
 orchestra_packet_received(void)
