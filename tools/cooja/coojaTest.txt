@@ -1,0 +1,109 @@
+Buildfile: /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/build.xml
+
+init:
+
+compile:
+
+copy configs:
+
+jar_cooja:
+      [jar] Building jar: /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/dist/cooja.jar
+
+jar:
+
+init:
+
+compile:
+
+jar:
+
+init:
+
+mspsim:
+
+init:
+
+compile:
+
+jar:
+
+coffee:
+
+init:
+
+compile:
+    [javac] Compiling 8 source files to /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/tools/coffee-manager/build
+
+configs:
+
+jar:
+      [jar] Building jar: /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/tools/coffee-manager/coffee.jar
+     [copy] Copying 1 file to /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/apps/mspsim/lib
+
+compile:
+
+copy:
+
+jar:
+
+init:
+
+compile:
+
+jar:
+
+init:
+
+clean:
+   [delete] Deleting directory /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/apps/serial_socket/build
+   [delete] Deleting: /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/apps/serial_socket/serial-socket.jar
+
+compile:
+    [mkdir] Created dir: /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/apps/serial_socket/build
+    [javac] Compiling 2 source files to /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/apps/serial_socket/build
+
+jar:
+      [jar] Building jar: /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/apps/serial_socket/serial-socket.jar
+
+init:
+
+clean:
+   [delete] Deleting directory /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/apps/powertracker/build
+   [delete] Deleting: /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/apps/powertracker/powertracker.jar
+
+compile:
+    [mkdir] Created dir: /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/apps/powertracker/build
+    [javac] Compiling 1 source file to /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/apps/powertracker/build
+
+jar:
+      [jar] Building jar: /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/apps/powertracker/powertracker.jar
+
+run:
+     [java]  INFO [AWT-EventQueue-1] (Cooja.java:2880) - External tools default settings: /external_tools_linux_64.config
+     [java]  INFO [AWT-EventQueue-1] (Cooja.java:2910) - External tools user settings: /home/sensornetw/.cooja.user.properties
+     [java]  INFO [Thread-1] (Simulation.java:422) - Simulation random seed: 123456
+     [java]  INFO [Thread-1] (CompileContiki.java:140) - > make node.cooja TARGET=cooja 
+     [java]  INFO [Thread-1] (Simulation.java:422) - Simulation random seed: 123456
+     [java]  INFO [Thread-1] (CompileContiki.java:140) - > make node.cooja TARGET=cooja 
+     [java]  INFO [Thread-1] (Visualizer.java:256) - Registered external visualizer: org.contikios.cooja.plugins.skins.DGRMVisualizerSkin
+     [java]  INFO [Thread-1] (TimeLine.java:567) - Zoom level: 500.0 microseconds/pixel 
+     [java]  INFO [Thread-7] (Simulation.java:253) - Simulation main loop started, system time: 1639580876935
+     [java]  INFO [Thread-7] (Simulation.java:312) - Simulation main loop stopped, system time: 1639580877591	Duration: 656 ms	Simulated time 7008 ms	Ratio 10.682926829268293
+     [java]  INFO [Thread-8] (Simulation.java:253) - Simulation main loop started, system time: 1639580922743
+     [java] #
+     [java] # A fatal error has been detected by the Java Runtime Environment:
+     [java] #
+     [java] #  SIGSEGV (0xb) at pc=0x00007f5948817922, pid=16062, tid=0x00007f5949229700
+     [java] #
+     [java] # JRE version: OpenJDK Runtime Environment (8.0_292-b10) (build 1.8.0_292-8u292-b10-0ubuntu1~20.04-b10)
+     [java] # Java VM: OpenJDK 64-Bit Server VM (25.292-b10 mixed mode linux-amd64 compressed oops)
+     [java] # Problematic frame:
+     [java] # C  [mtype635.cooja+0x1a922]  reschedule_unicast_slotframe+0x52
+     [java] #
+     [java] # Failed to write core dump. Core dumps have been disabled. To enable core dumping, try "ulimit -c unlimited" before starting Java again
+     [java] #
+     [java] # An error report file with more information is saved as:
+     [java] # /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/build/hs_err_pid16062.log
+
+BUILD SUCCESSFUL
+Total time: 1 minute 2 seconds

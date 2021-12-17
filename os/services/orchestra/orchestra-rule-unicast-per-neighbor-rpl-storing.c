@@ -45,6 +45,7 @@
 #include "net/ipv6/uip-ds6-route.h"
 #include "net/packetbuf.h"
 #include "net/routing/routing.h"
+#include "stdio.h"
 
 /*
  * The body of this rule should be compiled only when "nbr_routes" is available,
@@ -226,6 +227,7 @@ new_time_source(const struct tsch_neighbor *old, const struct tsch_neighbor *new
 static void
 init(uint16_t sf_handle)
 {
+  printf("storing\n");
   uint16_t timeslot;
   linkaddr_t *local_addr = &linkaddr_node_addr;
   

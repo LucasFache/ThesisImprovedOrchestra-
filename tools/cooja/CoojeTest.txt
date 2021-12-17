@@ -1,0 +1,115 @@
+Buildfile: /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/build.xml
+
+init:
+
+compile:
+
+copy configs:
+
+jar_cooja:
+      [jar] Building jar: /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/dist/cooja.jar
+
+jar:
+
+init:
+
+compile:
+
+jar:
+
+init:
+
+mspsim:
+
+init:
+
+compile:
+
+jar:
+
+coffee:
+
+init:
+
+compile:
+    [javac] Compiling 8 source files to /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/tools/coffee-manager/build
+
+configs:
+
+jar:
+      [jar] Building jar: /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/tools/coffee-manager/coffee.jar
+     [copy] Copying 1 file to /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/apps/mspsim/lib
+
+compile:
+
+copy:
+
+jar:
+
+init:
+
+compile:
+
+jar:
+
+init:
+
+clean:
+   [delete] Deleting directory /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/apps/serial_socket/build
+   [delete] Deleting: /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/apps/serial_socket/serial-socket.jar
+
+compile:
+    [mkdir] Created dir: /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/apps/serial_socket/build
+    [javac] Compiling 2 source files to /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/apps/serial_socket/build
+
+jar:
+      [jar] Building jar: /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/apps/serial_socket/serial-socket.jar
+
+init:
+
+clean:
+   [delete] Deleting directory /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/apps/powertracker/build
+   [delete] Deleting: /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/apps/powertracker/powertracker.jar
+
+compile:
+    [mkdir] Created dir: /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/apps/powertracker/build
+    [javac] Compiling 1 source file to /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/apps/powertracker/build
+
+jar:
+      [jar] Building jar: /home/sensornetw/ThesisCode/contiki-ng/tools/cooja/apps/powertracker/powertracker.jar
+
+run:
+     [java]  INFO [AWT-EventQueue-1] (Cooja.java:2880) - External tools default settings: /external_tools_linux_64.config
+     [java]  INFO [AWT-EventQueue-1] (Cooja.java:2910) - External tools user settings: /home/sensornetw/.cooja.user.properties
+     [java]  INFO [Thread-1] (Simulation.java:422) - Simulation random seed: 123456
+     [java]  INFO [Thread-1] (CompileContiki.java:140) - > make node.cooja TARGET=cooja 
+     [java]  INFO [Thread-1] (Visualizer.java:256) - Registered external visualizer: org.contikios.cooja.plugins.skins.DGRMVisualizerSkin
+     [java]  INFO [Thread-1] (TimeLine.java:567) - Zoom level: 500.0 microseconds/pixel 
+     [java]  INFO [Thread-4] (Simulation.java:253) - Simulation main loop started, system time: 1639738303816
+     [java]  INFO [Thread-4] (Simulation.java:312) - Simulation main loop stopped, system time: 1639738304621	Duration: 805 ms	Simulated time 8738 ms	Ratio 10.854658385093167
+     [java]  INFO [AWT-EventQueue-1] (Simulation.java:422) - Simulation random seed: 123457
+     [java]  INFO [Thread-5] (Simulation.java:422) - Simulation random seed: 123457
+     [java]  INFO [Thread-5] (CompileContiki.java:140) - > make node.cooja TARGET=cooja 
+     [java]  INFO [Thread-5] (TimeLine.java:567) - Zoom level: 500.0 microseconds/pixel 
+     [java]  INFO [Thread-8] (Simulation.java:253) - Simulation main loop started, system time: 1639738467392
+     [java]  INFO [Thread-8] (Simulation.java:312) - Simulation main loop stopped, system time: 1639738467967	Duration: 575 ms	Simulated time 7099 ms	Ratio 12.34608695652174
+     [java]  INFO [Thread-9] (Simulation.java:422) - Simulation random seed: 123457
+     [java]  INFO [Thread-9] (CompileContiki.java:140) - > make node.cooja TARGET=cooja 
+     [java]  INFO [Thread-9] (TimeLine.java:567) - Zoom level: 500.0 microseconds/pixel 
+     [java]  INFO [Thread-12] (Simulation.java:253) - Simulation main loop started, system time: 1639738703673
+     [java]  INFO [Thread-12] (Simulation.java:312) - Simulation main loop stopped, system time: 1639738704134	Duration: 461 ms	Simulated time 3352 ms	Ratio 7.27114967462039
+     [java]  INFO [Thread-13] (Simulation.java:253) - Simulation main loop started, system time: 1639738720520
+     [java]  INFO [Thread-13] (Simulation.java:312) - Simulation main loop stopped, system time: 1639738720919	Duration: 399 ms	Simulated time 5986 ms	Ratio 15.002506265664161
+     [java]  INFO [Thread-14] (Simulation.java:253) - Simulation main loop started, system time: 1639738724247
+     [java]  INFO [Thread-14] (Simulation.java:312) - Simulation main loop stopped, system time: 1639738726646	Duration: 2399 ms	Simulated time 22509 ms	Ratio 9.382659441433931
+     [java]  INFO [AWT-EventQueue-1] (Simulation.java:422) - Simulation random seed: 123458
+     [java]  INFO [Thread-15] (Simulation.java:422) - Simulation random seed: 123458
+     [java]  INFO [Thread-15] (CompileContiki.java:140) - > make node.cooja TARGET=cooja 
+     [java]  INFO [Thread-15] (TimeLine.java:567) - Zoom level: 500.0 microseconds/pixel 
+     [java]  INFO [Thread-18] (Simulation.java:253) - Simulation main loop started, system time: 1639738758901
+     [java]  INFO [Thread-18] (Simulation.java:312) - Simulation main loop stopped, system time: 1639738759838	Duration: 937 ms	Simulated time 7130 ms	Ratio 7.609391675560299
+     [java]  INFO [Thread-19] (Simulation.java:253) - Simulation main loop started, system time: 1639738767922
+     [java]  INFO [Thread-19] (Simulation.java:312) - Simulation main loop stopped, system time: 1639738774968	Duration: 7046 ms	Simulated time 55122 ms	Ratio 7.823162077774624
+
+BUILD SUCCESSFUL
+Total time: 8 minutes 11 seconds

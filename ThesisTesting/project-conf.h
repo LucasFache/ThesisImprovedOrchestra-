@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, SICS Swedish ICT.
+ * Copyright (c) 2016, Inria.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,50 +25,22 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
  */
+#define TCPIP_CONF_ANNOTATE_TRANSMISSIONS 1
+#define LOG_CONF_LEVEL_RPL LOG_LEVEL_INFO
+#define LOG_CONF_LEVEL_MAC LOG_LEVEL_DBG
 
-/**
- * \author Simon Duquennoy <simonduq@sics.se>
- */
+#define ENERGEST_CONF_ON 1
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#define CONF_SEND_INTERVAL    58
+#define CONF_MESSAGES         10
+#define CONF_START_DELAY      240
 
-/* Set to enable TSCH security */
-#ifndef WITH_SECURITY
-#define WITH_SECURITY 0
-#endif /* WITH_SECURITY */
-
-/* USB serial takes space, free more space elsewhere */
-#define SICSLOWPAN_CONF_FRAG 0
-#define UIP_CONF_BUFFER_SIZE 160
-
-/*******************************************************/
-/******************* Configure TSCH ********************/
-/*******************************************************/
-
-/* IEEE802.15.4 PANID */
-#define IEEE802154_CONF_PANID 0x81a5
-
-/* Do not start TSCH at init, wait for NETSTACK_MAC.on() */
-#define TSCH_CONF_AUTOSTART 0
-
-/* 6TiSCH minimal schedule length.
- * Larger values result in less frequent active slots: reduces capacity and saves energy. */
-#define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 3
-
-#if WITH_SECURITY
-
-/* Enable security */
-#define LLSEC802154_CONF_ENABLED 1
-
-#endif /* WITH_SECURITY */
 
 /**********************************************************************/
-/*******   configuration for time varying slotframe scheduling   ******/ //LF
+/*******   configuration for time varying slotframe scheduling   ******/
 
-#define ALICE_TSCH_CALLBACK_SLOTFRAME_START alice_callback_slotframe_start //ksh. alice time varying slotframe schedule
+//#define ALICE_TSCH_CALLBACK_SLOTFRAME_START alice_callback_slotframe_start //alice time varying slotframe schedule
 
 //Using the optimized scheduling (base on OSCAR)
 //#define OPTIMIZED_SCHEDULING    1
@@ -80,20 +52,3 @@
 #define LOG_CONF_WITH_ANNOTATE  1 //show RPL tree
 
 /**********************************************************************/
-
-
-/*******************************************************/
-/************* Other system configuration **************/
-/*******************************************************/
-
-
-/* Logging */
-//#define LOG_CONF_LEVEL_RPL                         LOG_LEVEL_WARN
-#define LOG_CONF_LEVEL_TCPIP                       LOG_LEVEL_WARN
-#define LOG_CONF_LEVEL_IPV6                        LOG_LEVEL_WARN
-#define LOG_CONF_LEVEL_6LOWPAN                     LOG_LEVEL_WARN
-#define LOG_CONF_LEVEL_MAC                         LOG_LEVEL_INFO
-#define LOG_CONF_LEVEL_FRAMER                      LOG_LEVEL_WARN
-#define TSCH_LOG_CONF_PER_SLOT                     1
-
-#endif /* PROJECT_CONF_H_ */

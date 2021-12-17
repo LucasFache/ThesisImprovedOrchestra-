@@ -47,6 +47,7 @@
 
 #include "contiki.h"
 #include "orchestra.h"
+#include "lib/memb.h"
 #include "net/ipv6/uip-ds6-route.h"
 #include "net/packetbuf.h"
 #include "net/routing/routing.h"
@@ -71,9 +72,10 @@ uint16_t current_class;
 /* The incoming packet count at a fixed time interval to measure the incoming traffic load */
 int packet_count = 0;
 
-
 #ifdef ALICE_TSCH_CALLBACK_SLOTFRAME_START
 static void reschedule_unicast_slotframe(void);
+/* Pre-allocated space for links */
+//MEMB(link_memb, struct tsch_link, TSCH_SCHEDULE_MAX_LINKS);
 #endif
 
 //#if UIP_MAX_ROUTES != 0
@@ -225,6 +227,7 @@ reschedule_timeslots(uint16_t new_class)
 }
 /*---------------------------------------------------------------------------*/ 
 // At this point the rpl-rk is not used to calculate the class. This option can be enabled when using more classes and when you are dealing with bigger networks.
+/*
 static uint16_t
 get_rpl_rank()
 {
@@ -247,6 +250,7 @@ get_rpl_rank()
       return div;
   }
 }
+*/
 /*---------------------------------------------------------------------------*/ 
 /*
 * Calculate the class of the node
@@ -255,7 +259,7 @@ get_rpl_rank()
 static void 
 set_node_class()
 {
-	uint16_t rpl_rank = get_rpl_rank();
+	//uint16_t rpl_rank = get_rpl_rank();
 	uint16_t subtree_size = uip_ds6_route_num_routes();
 	uint16_t new_class;  //root is class 1 max class is 4
 
@@ -276,7 +280,7 @@ set_node_class()
     }
   }
 
-  //printf("NODE_CLASS_INFO (Current class) \trpl_rank = %u\t subtree_size = %u \t new_class = %u\n",rpl_rank,subtree_size,new_class);
+  //printf("NODE_CLASS_INFO (Current class) \t subtree_size = %u \t new_class = %u\n",subtree_size,new_class);
 
   reschedule_timeslots(new_class);
   current_class = new_class;
@@ -455,47 +459,58 @@ reschedule_unicast_slotframe(void)
 {
   printf("Routing RESCHEDULING\n");
   //reschedule all the links
-  linkaddr_t *local_addr = &linkaddr_node_addr; 
-
-  linkaddr_list_t * head = NULL;
-  linkaddr_list_t * link = NULL;
+  //linkaddr_t *local_addr = &linkaddr_node_addr; 
+  LIST(temp_list);
+  /*
+  linkaddr_list_t * head = list_head(temp_list);
+  
   head = (linkaddr_list_t *) malloc(sizeof(linkaddr_list_t));
+  LIST_STRUCT_INIT(head, temp_links_list);
+  */
   struct tsch_link *ll = list_head(sf_unicast->links_list);
-  link = head;
+  struct tsch_link *link = malloc(sizeof(struct tsch_link));
 
   while(ll!=NULL) {    
+    printf("Routing into first while loop : ");
     link->addr = ll->addr;
     link->link_options = ll->link_options;
-    link->next = (linkaddr_list_t *) malloc(sizeof(linkaddr_list_t));
+    link->next = malloc(sizeof(struct tsch_link)); //memb_alloc(&link_memb);
     // for testing without impacting the scheduler
     // you can disable the two lines underneed, disable line 479 and enable line 461
-    tsch_schedule_remove_link(sf_unicast, ll);
-    ll = list_head(sf_unicast->links_list);
-    printf("Routing Link-option = %u\n",link->link_options);
-    //ll = ll->next;
+    list_add(temp_list, link);
+    printf("%u",tsch_schedule_remove_link(sf_unicast, ll));
+    
+    //ll = list_head(sf_unicast->links_list);
+    ll = ll->next;
+    printf("\nRouting Link-option = %u\n",link->link_options);
     link = link->next;
   }
 
 
-  link = head;
-  
+  struct tsch_link *l = list_head(temp_list);
+  printf("Routing HEAD Link-option head = %u\n",l->link_options);
   //printf("TVSS list = %u \n",l->timeslot);
-  while(link!=NULL) {    
-    printf("Routing HEAD Link-option head = %u\n",link->link_options);
+  /*while(l!=NULL) {    
+    printf("Routing HEAD Link-option head = %u\n",l->link_options);
     
     const linkaddr_t *linkaddr = &link->addr;
     uint16_t timeslot = get_node_timeslot(linkaddr);
     uint16_t local_channel_offset = get_node_channel_offset(local_addr);
     uint8_t link_options = link->link_options;
-     printf("Routing ADDR = %p, timeslot = %u, channel_off = %u, linkoptions = %u \n",link->addr, timeslot,local_channel_offset,link_options);
+    
+    //printf("Routing ADDR = %p, timeslot = %u, channel_off = %u, linkoptions = %u \n",link->addr, timeslot,local_channel_offset,link_options);
     
     tsch_schedule_add_link(sf_unicast, link_options, LINK_TYPE_NORMAL, linkaddr, timeslot, local_channel_offset, 1);
+    
     //printf(" TVSS timeslot = %u \t channel_offset = %u  \t new timeslot = %u new channel_offset = %u  asfn = %u\n",l->timeslot,l->channel_offset,timeslot,local_channel_offset,asfn_schedule);
     //link = link->next;
-    printf("Routing HEAD Link-option head = %u\n",link->link_options);
-    link = list_item_next(link);
-    
-  }
+    //printf("Routing HEAD Link-option head = %u\n",link->link_options);
+    list_remove(temp_list,l);
+    l = list_head(temp_list);
+  }*/
+
+  free(link);
+  //free(head);
 }
 #endif
 /*---------------------------------------------------------------------------*/
@@ -532,6 +547,7 @@ PROCESS_THREAD(traffic_load_process, ev, data)
 static void
 init(uint16_t sf_handle)
 {
+  printf("tvss-oscar\n");
   uint16_t timeslot;
   linkaddr_t *local_addr = &linkaddr_node_addr;
 

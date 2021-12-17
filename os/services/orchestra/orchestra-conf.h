@@ -59,8 +59,6 @@
 #define ORCHESTRA_RULES { &eb_per_time_source, \
                             &tvss_oscar, \
                             &default_common} 
-                            
-// &tvss_oscar, 
 #endif /* __ORCHESTRA_RULES__ */
 
 #endif /* ORCHESTRA_CONF_RULES */
