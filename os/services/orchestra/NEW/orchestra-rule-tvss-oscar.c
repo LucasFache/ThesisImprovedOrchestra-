@@ -97,7 +97,7 @@ uint16_t nbr_extra_rx_slots = 0;
 PROCESS(traffic_load_process,"traffic load");
 #endif
 
-/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/ // LF
 static uint16_t
 get_node_timeslot(const linkaddr_t *addr)
 {
@@ -107,11 +107,13 @@ get_node_timeslot(const linkaddr_t *addr)
     return 0xffff;
   }
 }
-/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/  // LF
 static uint16_t
 get_node_channel_offset(const linkaddr_t *addr)
 {
-  if(addr != NULL && ORCHESTRA_UNICAST_MAX_CHANNEL_OFFSET >= ORCHESTRA_UNICAST_MIN_CHANNEL_OFFSET) {
+  int num_ch = (sizeof(TSCH_DEFAULT_HOPPING_SEQUENCE)/sizeof(uint8_t))-1;
+
+  if(addr != NULL && ORCHESTRA_UNICAST_MAX_CHANNEL_OFFSET >= ORCHESTRA_UNICAST_MIN_CHANNEL_OFFSET && num_ch > 0) {
     return ORCHESTRA_LINKADDR_HASH(addr) % (ORCHESTRA_UNICAST_MAX_CHANNEL_OFFSET - ORCHESTRA_UNICAST_MIN_CHANNEL_OFFSET + 1)
         + ORCHESTRA_UNICAST_MIN_CHANNEL_OFFSET;
   } else {
@@ -158,22 +160,22 @@ allocate_more_slots(uint16_t new_class)
 
   while(nbr_extra_tx_slots < nbr_tx_slots) {
     LOG_INFO("%u",nbr_rx_slots);
-    printf("Routing class = %u added an extra slot nbr: %u\n",new_class,nbr_extra_tx_slots);
+    //printf("Routing class = %u added an extra slot nbr: %u\n",new_class,nbr_extra_tx_slots);
     linkaddr_t *local_addr = &linkaddr_node_addr;                 
     uint16_t tx_local_channel_offset = get_node_channel_offset(&orchestra_parent_linkaddr);  
     uint16_t rx_local_channel_offset =  get_node_channel_offset(local_addr);  
     uint16_t tx_timeslot = get_node_timeslot(&orchestra_parent_linkaddr);
     uint16_t rx_timeslot = get_node_timeslot(local_addr);
-    uint8_t tx_link_options = LINK_OPTION_TX | UNICAST_SLOT_SHARED_FLAG;
-    uint8_t rx_link_options = LINK_OPTION_RX;
+    uint8_t rx_link_options = LINK_OPTION_TX | UNICAST_SLOT_SHARED_FLAG;
+    uint8_t tx_link_options = LINK_OPTION_RX;
 
     if(rx_timeslot == get_node_timeslot(&orchestra_parent_linkaddr)) {
       /* This is also our timeslot, add necessary flags */
-      tx_link_options |= LINK_OPTION_RX;
-      tsch_schedule_add_link(sf_unicast, tx_link_options, LINK_TYPE_NORMAL, &tsch_broadcast_address,
+      uint8_t rx_link_options |= LINK_OPTION_RX;
+      tsch_schedule_add_link(sf_unicast, rx_link_options, LINK_TYPE_NORMAL, &tsch_broadcast_address,
           tx_timeslot, tx_local_channel_offset, 1);
 
-      nbr_extra_tx_slots++;
+      nbr_extra_rx_slots++;
     } else {
       tsch_schedule_add_link(sf_unicast, tx_link_options, LINK_TYPE_NORMAL, &tsch_broadcast_address,
           tx_timeslot, tx_local_channel_offset, 1);
@@ -193,13 +195,11 @@ allocate_more_slots(uint16_t new_class)
 static void
 reduce_allocated_slots(uint16_t new_class)
 {
-  /*
   uint16_t nbr_tx_slots = 0;
   if(new_class == 1) nbr_tx_slots = 3;
   if(new_class == 2) nbr_tx_slots = 2;
   if(new_class == 3) nbr_tx_slots = 1;
 
-  
   uint8_t link_options_one = LINK_OPTION_TX | UNICAST_SLOT_SHARED_FLAG; 
   uint8_t link_options_two = LINK_OPTION_RX;
   uint8_t link_option_three = LINK_OPTION_TX | UNICAST_SLOT_SHARED_FLAG | LINK_OPTION_RX;
@@ -232,7 +232,6 @@ reduce_allocated_slots(uint16_t new_class)
       l = l->next;
     }    
   }
-  */
 }
 /*---------------------------------------------------------------------------*/ 
 /*---------------------------------------------------------------------------*/ 
@@ -349,17 +348,15 @@ neighbor_has_uc_link(const linkaddr_t *linkaddr)
 static void
 add_uc_link(const linkaddr_t *linkaddr)
 {
-
-  printf("Routing SUBTREE SIZE: %u\n",uip_ds6_route_num_routes());
   if(linkaddr != NULL) {
     //linkaddr_t *local_addr = &linkaddr_node_addr;                 // LF
-    //local_channel_offset = get_node_channel_offset(local_addr);   // LF
+    local_channel_offset = get_node_channel_offset(linkaddr);   // LF
     uint16_t timeslot = get_node_timeslot(linkaddr);
-    uint8_t link_options = ORCHESTRA_UNICAST_SENDER_BASED ? LINK_OPTION_RX : LINK_OPTION_TX | UNICAST_SLOT_SHARED_FLAG;
+    uint8_t link_options = LINK_OPTION_TX | UNICAST_SLOT_SHARED_FLAG;
 
     if(timeslot == get_node_timeslot(&linkaddr_node_addr)) {
       /* This is also our timeslot, add necessary flags */
-      link_options |= ORCHESTRA_UNICAST_SENDER_BASED ? LINK_OPTION_TX | UNICAST_SLOT_SHARED_FLAG: LINK_OPTION_RX;
+      link_options |= LINK_OPTION_RX;
     }
     /* Add/update link.
      * Always configure the link with the l#endifel offset will override the link's channel offset.
@@ -509,7 +506,7 @@ reschedule_unicast_slotframe(void)
 {
   printf("RESCHEDULE_UNICAST_SLOTFRAME\n");
   //reschedule all the links
-  linkaddr_t *local_addr = &linkaddr_node_addr; 
+  //linkaddr_t *local_addr = &linkaddr_node_addr; 
   struct tsch_link *l;
   l = list_head(sf_unicast->links_list);
   nbr_table_item_t *item = nbr_table_head(nbr_routes);
@@ -629,12 +626,12 @@ PROCESS_THREAD(traffic_load_process, ev, data)
     packet_count = get_rx_packet_count();
     etimer_reset(&timer);
     if(packet_count == 0 && current_class < MAX_NODE_CLASS){
-      printf("Routing HIGHER CLASS IS SET\n");
+      //printf("Routing HIGHER CLASS IS SET\n");
       reschedule_timeslots(current_class+1);
       current_class++;
     }
     else if (temp_packet_count == 0 && packet_count != 0){
-      printf("Routing BACK TO INITIAL CLASS\n");
+      //printf("Routing BACK TO INITIAL CLASS\n");
       set_node_class();
     }
 

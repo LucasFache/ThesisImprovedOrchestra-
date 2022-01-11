@@ -32,15 +32,18 @@
 
 #define ENERGEST_CONF_ON 1
 
-#define CONF_SEND_INTERVAL    58
-#define CONF_MESSAGES         10
+#define CONF_SEND_INTERVAL    6
+#define CONF_MESSAGES         50
 #define CONF_START_DELAY      240
 
+#define RPL_CONF_WITH_STORING 1
 
 /**********************************************************************/
 /*******   configuration for time varying slotframe scheduling   ******/
 
 //#define ALICE_TSCH_CALLBACK_SLOTFRAME_START alice_callback_slotframe_start //alice time varying slotframe schedule
+
+#define OSCAR_OPTIMIZED_SCHEDULING 1
 
 //Using the optimized scheduling (base on OSCAR)
 //#define OPTIMIZED_SCHEDULING    1
