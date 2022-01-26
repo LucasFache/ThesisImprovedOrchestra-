@@ -102,7 +102,7 @@ static uint16_t
 get_node_timeslot(const linkaddr_t *addr1, const linkaddr_t *addr2)
 {
   if(addr1 != NULL && addr2 != NULL && ORCHESTRA_UNICAST_PERIOD > 0) {
-    return real_hash((ORCHESTRA_LINKADDR_HASH2(addr1, addr2)+asfn_schedule), (ORCHESTRA_UNICAST_PERIOD));
+    return real_hash((ORCHESTRA_LINKADDR_HASH2(addr1, addr2)+asfn_schedule), (ORCHESTRA_UNICAST_PERIOD)); //+asfn_schedule
   } else {
     return 0xffff;
   }
@@ -114,7 +114,7 @@ get_node_channel_offset(const linkaddr_t *addr1, const linkaddr_t *addr2)
   int num_ch = (sizeof(TSCH_DEFAULT_HOPPING_SEQUENCE)/sizeof(uint8_t))-1;
 
   if(addr1 != NULL && addr2 != NULL && ORCHESTRA_UNICAST_MAX_CHANNEL_OFFSET >= ORCHESTRA_UNICAST_MIN_CHANNEL_OFFSET && num_ch > 0) {
-    return 1+real_hash((ORCHESTRA_LINKADDR_HASH2(addr1, addr2)+asfn_schedule),num_ch);
+    return 1+real_hash((ORCHESTRA_LINKADDR_HASH2(addr1, addr2)),num_ch); //+asfn_schedule
   } else {
     return 0xffff;
   }
@@ -345,18 +345,70 @@ neighbor_has_uc_link(const linkaddr_t *linkaddr)
 }
 /*---------------------------------------------------------------------------*/
 static void
+add_uc_parent_link(const linkaddr_t *parentlinkaddr)
+{
+  if(parentlinkaddr != NULL) {
+    linkaddr_t *local_addr = &linkaddr_node_addr;                 // LF
+    //local_channel_offset = get_node_channel_offset(local_addr, parentlinkaddr);   // LF
+    uint16_t timeslot = get_node_timeslot(local_addr, parentlinkaddr);
+    uint8_t link_options = LINK_OPTION_TX | UNICAST_SLOT_SHARED_FLAG;
+
+    //if(timeslot == get_node_timeslot(&linkaddr_node_addr, &orchestra_parent_linkaddr)) {
+      /* This is also our timeslot, add necessary flags */
+      //link_options |= LINK_OPTION_RX;
+    //}
+
+    struct tsch_link *l = list_head(sf_unicast->links_list);
+    // Searching for the link in the linklist
+    while(l!=NULL) { 
+      if(&l->addr == &orchestra_parent_linkaddr){
+        if(&timeslot == &l->timeslot) {
+          /* This is also our timeslot, add necessary flags */
+          link_options |= LINK_OPTION_RX;
+          break;
+        }
+      }
+      l = list_item_next(l);
+    }
+
+    /* Add/update link.
+     * Always configure the link with the l#endifel offset will override the link's channel offset.
+     */ 
+    //&tsch_broadcast_address was used to set the address, but is not necessary broadcast is set if needed when link is used to set packet in queue
+    tsch_schedule_add_link(sf_unicast, link_options, LINK_TYPE_NORMAL, parentlinkaddr,
+          timeslot, local_channel_offset, 1);
+
+    printf("SCHEDULING ADD LINK TO NEW TIME SOURCE(PARRENT): node address = %u, parent address = %u, local_channel_offset = %u, timeslot = %u\n",&linkaddr_node_addr,&orchestra_parent_linkaddr,local_channel_offset, timeslot);
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
 add_uc_link(const linkaddr_t *linkaddr)
 {
   if(linkaddr != NULL) {
     linkaddr_t *local_addr = &linkaddr_node_addr;                 // LF
-    local_channel_offset = get_node_channel_offset(linkaddr, local_addr);   // LF
+    //local_channel_offset = get_node_channel_offset(linkaddr, local_addr);   // LF
     uint16_t timeslot = get_node_timeslot(linkaddr, local_addr);
     uint8_t link_options = LINK_OPTION_TX | UNICAST_SLOT_SHARED_FLAG;
 
-    if(timeslot == get_node_timeslot(&linkaddr_node_addr, &orchestra_parent_linkaddr)) {
+    //if(timeslot == get_node_timeslot(&linkaddr_node_addr, &orchestra_parent_linkaddr)) {
       /* This is also our timeslot, add necessary flags */
-      link_options |= LINK_OPTION_RX;
+      //link_options |= LINK_OPTION_RX;
+    //}
+
+    struct tsch_link *l = list_head(sf_unicast->links_list);
+    // Searching for the link in the linklist
+    while(l!=NULL) { 
+      if(&l->addr == &orchestra_parent_linkaddr){
+        if(&timeslot == &l->timeslot) {
+          /* This is also our timeslot, add necessary flags */
+          link_options |= LINK_OPTION_RX;
+          break;
+        }
+      }
+      l = list_item_next(l);
     }
+
     /* Add/update link.
      * Always configure the link with the l#endifel offset will override the link's channel offset.
      */ 
@@ -364,7 +416,7 @@ add_uc_link(const linkaddr_t *linkaddr)
     tsch_schedule_add_link(sf_unicast, link_options, LINK_TYPE_NORMAL, linkaddr,
           timeslot, local_channel_offset, 1);
   
-    printf("SCHEDULING: local_channel_offset = %u, timeslot = %u link_option = %u\n",local_channel_offset, timeslot, link_options);
+    printf("SCHEDULING: sender = %u, destination = %u, local_channel_offset = %u, timeslot = %u link_option = %u\n",&linkaddr_node_addr,&linkaddr,local_channel_offset, timeslot, link_options);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -444,6 +496,7 @@ static void
 child_added(const linkaddr_t *linkaddr)
 {
   add_uc_link(linkaddr);
+  printf("SCHEDULING CHILD ADDED");
   #ifdef OSCAR_OPTIMIZED_SCHEDULING
   set_node_class();
   #endif
@@ -493,7 +546,9 @@ new_time_source(const struct tsch_neighbor *old, const struct tsch_neighbor *new
       linkaddr_copy(&orchestra_parent_linkaddr, &linkaddr_null);
     }
     remove_uc_link(old_addr);
-    add_uc_link(new_addr);
+    //add_uc_link(new_addr);
+    add_uc_parent_link(new_addr);
+    printf("Adding link to new timesource (Parent)\n");
   }
 }
 
@@ -669,7 +724,7 @@ init(uint16_t sf_handle)
             LINK_TYPE_NORMAL, &tsch_broadcast_address,
             timeslot, local_channel_offset, 1);
   
-  printf("SCHEDULING TO PARRENT: local_channel_offset = %u, timeslot = %u\n",local_channel_offset, timeslot);
+  printf("SCHEDULING LISENING: node address = %u, parent address = %u, local_channel_offset = %u, timeslot = %u\n",&linkaddr_node_addr,&orchestra_parent_linkaddr,local_channel_offset, timeslot);
       
 }
 /*---------------------------------------------------------------------------*/
