@@ -70,7 +70,7 @@
 
 //#define ALICE_TSCH_CALLBACK_SLOTFRAME_START alice_callback_slotframe_start //ksh. alice time varying slotframe schedule
 
-//#define OSCAR_OPTIMIZED_SCHEDULING 1
+#define OSCAR_OPTIMIZED_SCHEDULING 1
 
 //Using the optimized scheduling (base on OSCAR)
 //#define OPTIMIZED_SCHEDULING    1
