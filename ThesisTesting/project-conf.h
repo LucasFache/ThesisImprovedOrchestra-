@@ -32,9 +32,11 @@
 
 #define ENERGEST_CONF_ON 1
 
-#define CONF_SEND_INTERVAL    4
-#define CONF_MESSAGES         10
+#define CONF_SEND_INTERVAL    6
+#define CONF_MESSAGES         100
 #define CONF_START_DELAY      300
+
+#define ORCHESTRA_CONF_UNICAST_PERIOD 17
 
 #define RPL_CONF_WITH_STORING 1
 
